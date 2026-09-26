@@ -24,8 +24,8 @@
   <main id="main" class="workspace">
     <aside class="side">
       <section id="import" class="panel" aria-labelledby="import-h"></section>
-      <section id="bands" class="panel bands" aria-labelledby="bands-h"></section>
       <section id="slots" class="panel" aria-labelledby="slots-h"></section>
+      <section id="bands" class="panel bands" aria-labelledby="bands-h"></section>
     </aside>
     <section class="stage" aria-label="Fixture block">
       <div class="stage-head">
@@ -34,6 +34,7 @@
         <div class="actions"><button id="generate" class="btn primary" type="button">Generate 4 weeks</button></div>
       </div>
       <div id="grid" class="grid-wrap" role="region" aria-label="Fixture grid" tabindex="0"></div>
+      <div id="byes"></div>
       <div id="unscheduled"></div>
       <section id="export" class="panel export" aria-labelledby="export-h"></section>
       <details id="log" class="log"><summary>Solver log and constraints</summary><pre></pre></details>

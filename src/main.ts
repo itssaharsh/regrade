@@ -74,7 +74,7 @@ function generate(animate: boolean): void {
   state.animate = animate
   render()
   const c = state.block.counters
-  say(`Generated ${state.block.fixtures.length} fixtures over ${state.setup.weeks} weeks. ${c.clashes} clashes, ${c.repeats} repeat pairings, ${state.block.unscheduled.length} unscheduled.`)
+  say(`Generated ${state.block.fixtures.length} fixtures over ${state.setup.weeks} weeks. ${c.clashes} clashes, ${c.repeats} repeat pairings, ${state.block.unscheduled.length} unscheduled, ${state.block.byes.length} byes.`)
 }
 
 function onMove(teamId: string, toBandId: string, index?: number): void {
@@ -90,7 +90,7 @@ function onMove(teamId: string, toBandId: string, index?: number): void {
 
 // ---------- render
 function render(): void {
-  renderImport(); renderBands(); renderSlots(); renderStageHead(); renderGrid(); renderUnscheduled(); renderExport(); renderLog()
+  renderImport(); renderBands(); renderSlots(); renderStageHead(); renderGrid(); renderByes(); renderUnscheduled(); renderExport(); renderLog()
   state.animate = false
 }
 
@@ -134,13 +134,13 @@ function renderBands(): void {
   const name = (id: string): string => state.parsed.teams.find(t => t.id === id)?.name ?? id
   const moved = movedTeams(state.bands, state.recordedDivision)
   el.innerHTML = `<h2 id="bands-h">Bands by goals per game</h2>
-    <p class="small muted">Drag a team between bands, or use the arrows. ${moved} team${moved === 1 ? '' : 's'} change division against the results file.</p>
+    <p class="small muted">Ordered by goal difference per game; spread is the gap between a band's strongest and weakest team. Drag a team between bands, or use the arrows. ${moved} team${moved === 1 ? '' : 's'} change division against the results file.</p>
     ${state.bands.map((b, bi) => {
       const spread = bandSpread(b, state.stats)
-      return `<section class="band" data-band="${b.id}"><div class="band-head"><h3><span class="swatch ${BAND_CLASS[bi]}" aria-hidden="true">${b.name.slice(-1)}</span>${esc(b.name)}</h3><span class="spread num">${b.teamIds.length} teams, spread ${spread.toFixed(2)} goals/game</span></div>
+      return `<section class="band" data-band="${b.id}"><div class="band-head"><h3><span class="swatch ${BAND_CLASS[bi]}" aria-hidden="true">${b.name.slice(-1)}</span>${esc(b.name)}</h3><span class="spread num">${b.teamIds.length} teams${b.teamIds.length % 2 ? ' (one bye a week)' : ''}, spread ${spread.toFixed(2)}</span></div>
         <ul class="band-list" data-band="${b.id}" aria-label="${esc(b.name)}">${b.teamIds.map(id => {
           const s = state.stats.get(id)!
-          return `<li class="team" draggable="true" data-id="${id}"><span class="handle" aria-hidden="true">⋮⋮</span><span class="name" title="${esc(name(id))}">${esc(name(id))}</span><span class="stat num" title="played, goal difference per game">${s.played}p ${s.gdPerGame >= 0 ? '+' : '−'}${Math.abs(s.gdPerGame).toFixed(2)}</span><span class="move">${bi > 0 ? `<button type="button" data-up="${id}" aria-label="Move ${esc(name(id))} up to ${esc(state.bands[bi - 1].name)}">↑</button>` : ''}${bi < state.bands.length - 1 ? `<button type="button" data-down="${id}" aria-label="Move ${esc(name(id))} down to ${esc(state.bands[bi + 1].name)}">↓</button>` : ''}</span></li>`
+          return `<li class="team" draggable="true" data-id="${id}"><span class="handle" aria-hidden="true">⠿</span><span class="name" title="${esc(name(id))}">${esc(name(id))}</span><span class="stat num" title="${s.played} played, goal difference per game">${s.gdPerGame >= 0 ? '+' : '−'}${Math.abs(s.gdPerGame).toFixed(2)}</span><span class="move">${bi > 0 ? `<button type="button" data-up="${id}" aria-label="Move ${esc(name(id))} up to ${esc(state.bands[bi - 1].name)}">↑</button>` : ''}${bi < state.bands.length - 1 ? `<button type="button" data-down="${id}" aria-label="Move ${esc(name(id))} down to ${esc(state.bands[bi + 1].name)}">↓</button>` : ''}</span></li>`
         }).join('')}</ul></section>`
     }).join('')}`
   el.querySelectorAll<HTMLButtonElement>('button[data-up]').forEach(b => b.addEventListener('click', () => {
@@ -238,6 +238,15 @@ function renderGrid(): void {
 }
 
 const toUk = (iso: string): string => { const [y, m, d] = iso.split('-'); return `Sat ${d}/${m}/${y}` }
+
+function renderByes(): void {
+  const el = $('#byes')
+  const name = (id: string): string => state.parsed.teams.find(t => t.id === id)?.name ?? id
+  if (!state.block || state.block.byes.length === 0) { el.innerHTML = ''; return }
+  const wk = state.block.byes.filter(b => b.week === state.week)
+  const bandOf = (id: string): string => state.bands.find(b => b.teamIds.includes(id))?.name ?? ''
+  el.innerHTML = `<p class="byes"><b>Bye this Saturday:</b> ${wk.map(b => `${esc(name(b.teamId))} (${esc(bandOf(b.teamId))})`).join(', ') || 'none'}. <span class="muted">Bands with an odd number of teams rest one team each week, a different team every week.</span></p>`
+}
 
 function renderUnscheduled(): void {
   const el = $('#unscheduled')
