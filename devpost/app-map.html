@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Regrade app map</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;max-width:860px;margin:32px auto;padding:0 16px;color:#151515}h1,h2{font-family:"Barlow Condensed",system-ui;letter-spacing:.02em}code{background:#F4F5F2;padding:1px 4px;border-radius:3px}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #CFD3CC;vertical-align:top}details{margin:8px 0}summary{cursor:pointer;font-weight:600}.tip{background:#FCE6DC;padding:10px 12px;border-radius:8px}</style></head>
+<body>
+<h1>Regrade — app map</h1>
+<p>One page in the browser, no server, no model. Follow one action, <em>Generate 4 weeks</em>, through the code:</p>
+<table><tr><th>Step</th><th>Where</th><th>What happens</th></tr>
+<tr><td>1</td><td><code>src/main.ts</code> → <code>renderStageHead()</code></td><td>The button's click handler calls <code>generate(true)</code>.</td></tr>
+<tr><td>2</td><td><code>src/main.ts</code> → <code>generate()</code></td><td>Calls <code>generateBlock(bands, stats, played, teams, setup)</code>, stores the block in <code>state</code>, re-renders, announces the counters in the status region.</td></tr>
+<tr><td>3</td><td><code>src/scheduler.ts</code> → <code>chooseRounds()</code></td><td>Per band, week by week: a backtracking search pairs every team once, avoiding pairings already played and pairing a team owed a home game with one owed an away game.</td></tr>
+<tr><td>4</td><td><code>src/scheduler.ts</code> → <code>generateBlock()</code></td><td>Every pairing gets a venue, pitch and time from the slots the secretary set; hard constraints checked, preferences scored; fixtures that don't fit go to <code>unscheduled</code> with a reason.</td></tr>
+<tr><td>5</td><td><code>src/scheduler.ts</code> → <code>countConstraints()</code></td><td>An independent recount of clashes, team clashes and the home/away gap; the same function the validate script uses.</td></tr>
+<tr><td>6</td><td><code>src/main.ts</code> → <code>renderGrid()</code>, <code>renderExport()</code></td><td>One table per venue with the fixtures in slot order; the CSV preview and Download call <code>toUploaderCsv()</code> in <code>src/export.ts</code>.</td></tr></table>
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Job</th><th>Tested by</th></tr>
+<tr><td><code>src/results.ts</code></td><td>Parse pasted rows (two layouts), name bad rows, tally each team, collect played pairings.</td><td><code>tests/scheduler.test.ts</code> (banding block), <code>scripts/validate.ts</code></td></tr>
+<tr><td><code>src/banding.ts</code></td><td>Propose bands by goals per game; move a team; spread; count of regraded teams.</td><td>tests, validate</td></tr>
+<tr><td><code>src/scheduler.ts</code></td><td>Pairings and slots, constraints and counters.</td><td>tests (round robin, matching, block, shortfall), validate</td></tr>
+<tr><td><code>src/export.ts</code></td><td>fixtureupload.csv in the FA uploader's nine columns.</td><td>tests, validate</td></tr>
+<tr><td><code>src/seed.ts</code></td><td>The fictional league (deterministic PRNG) and its six Saturdays of results.</td><td>validate</td></tr>
+<tr><td><code>src/main.ts</code>, <code>index.html</code>, <code>src/style.css</code></td><td>State, rendering, drag and arrows, states via <code>?state=</code>, shortcuts, tokens.</td><td><code>qa/shots.py</code> (screenshots + axe, not committed)</td></tr></table>
+<h2>A practice to reuse</h2>
+<p class="tip"><strong>Prove the kernel before the screen.</strong> The first slice was <code>npm run validate</code>: it seeds the league, generates a block and prints PASS or FAIL for every rule. It caught two real defects (4 repeat pairings and a home/away gap of 4) before any UI existed, and the fix is recorded in <code>docs/adr/0002-matching-not-solver-library.md</code>. Next time: write the PASS/FAIL script for the one thing that must be true, then build the screen that shows it.</p>
+<details><summary>Commands</summary><p><code>npm run dev</code> · <code>npm test</code> · <code>npm run validate</code> · <code>npm run build</code></p></details>
+</body></html>
