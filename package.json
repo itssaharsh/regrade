@@ -1,0 +1,21 @@
+{
+  "name": "regrade",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Re-band youth-league teams by results and refixture them into your pitch slots; export to FA Full-Time.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "validate": "node --experimental-strip-types --no-warnings scripts/validate.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}
