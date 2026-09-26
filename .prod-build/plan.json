@@ -1,0 +1,200 @@
+{
+  "project": "regrade",
+  "mode": "hackathon",
+  "channel": "direct",
+  "base": "eb0866e",
+  "suite": [
+    "npm run typecheck",
+    "npm test",
+    "npm run validate",
+    "npm run build"
+  ],
+  "parallel": false,
+  "milestones": [
+    {
+      "id": "M1",
+      "goal": "J1 generate-and-export works end to end on the seeded league (already built; evidence recorded here)",
+      "tasks": [
+        "T01"
+      ]
+    },
+    {
+      "id": "M2",
+      "goal": "Verified, reviewed, deployed and submitted",
+      "tasks": [
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "Vertical slice: results to bands to block to CSV",
+      "objective": "The seeded league parses, bands, schedules four weeks and exports the uploader CSV; the workspace shows it",
+      "role": "product-engineer",
+      "size": "L",
+      "deps": [],
+      "writes": [
+        "src/**",
+        "tests/**",
+        "scripts/**",
+        "index.html",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "vite.config.ts",
+        "public/**"
+      ],
+      "acceptance": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4"
+      ],
+      "verify": [
+        "npm run validate",
+        "npm test"
+      ],
+      "rollback": "git revert the slice commits",
+      "status": "done",
+      "notes": "built before pb.py init; evidence re-run after task start",
+      "base": "eb0866e",
+      "started_after": 5,
+      "evidence": [
+        "E0006",
+        "E0007",
+        "E0008",
+        "E0009"
+      ]
+    },
+    {
+      "id": "T02",
+      "title": "Fresh-context review and bug hunt",
+      "objective": "Six independent reviewers (contract, scheduler, UX, accessibility, submission honesty, security/deploy) with adversarial verification of every finding; findings saved to .prod-build/reports/review.md",
+      "role": "code-reviewer",
+      "kind": "review",
+      "size": "M",
+      "deps": [
+        "T01"
+      ],
+      "writes": [
+        ".prod-build/reports/**"
+      ],
+      "acceptance": [
+        "every blocking finding has file:line and a reproduction"
+      ],
+      "verify": [
+        "observe: review report saved with confirmed and refuted findings"
+      ],
+      "rollback": "n/a",
+      "status": "doing",
+      "notes": "runs as a workflow; reviewers change no code",
+      "base": "eb0866e",
+      "started_after": 9
+    },
+    {
+      "id": "T03",
+      "title": "Fix confirmed review findings",
+      "objective": "Every confirmed blocking or major finding fixed through a failing test where a rule is involved, minor ones logged",
+      "role": "product-engineer",
+      "size": "M",
+      "deps": [
+        "T02"
+      ],
+      "writes": [
+        "src/**",
+        "tests/**",
+        "index.html",
+        "README.md",
+        "devpost/**",
+        "UI-SPEC.md"
+      ],
+      "acceptance": [
+        "AC-1",
+        "AC-2",
+        "AC-3",
+        "AC-4",
+        "AC-5",
+        "AC-6"
+      ],
+      "verify": [
+        "npm test",
+        "python3 qa/shots.py"
+      ],
+      "rollback": "git revert the fix commits",
+      "status": "todo",
+      "notes": "qa/shots.py needs a preview server on 4173; run it through pb.py run with the server started in the background"
+    },
+    {
+      "id": "T04",
+      "title": "Deploy verification on the live URL",
+      "objective": "Smoke and the demo flow three times on the deployed site, logged out, with a reset between runs",
+      "kind": "verify",
+      "size": "S",
+      "deps": [
+        "T03"
+      ],
+      "writes": [],
+      "acceptance": [
+        "AC-7"
+      ],
+      "verify": [
+        "python3 .prod-build/pb.py smoke https://itssaharsh.github.io/regrade/ --routes /",
+        "observe: demo flow J1 completed 3 times on the live URL with no console errors"
+      ],
+      "rollback": "n/a",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "id": "T05",
+      "title": "Demo video",
+      "objective": "A narrated demo under three minutes recorded from the live URL, passing the kit's QA gate (length, no narration gaps, no static picture over 3.5 s, loudness, ASR coverage)",
+      "kind": "qa",
+      "size": "M",
+      "deps": [
+        "T04"
+      ],
+      "writes": [],
+      "acceptance": [
+        "Presentation: the video shows paste-free flow, move, generate, export, shortfall"
+      ],
+      "verify": [
+        "observe: demo-kit qa.py passed and every contact sheet reviewed"
+      ],
+      "rollback": "n/a",
+      "status": "todo",
+      "notes": "recorded in ../regrade-demo; final.mp4 is delivered outside the repo"
+    },
+    {
+      "id": "T06",
+      "title": "Submission package",
+      "objective": "README links, delivery report and submission facts final; every link tested logged out",
+      "size": "S",
+      "deps": [
+        "T05"
+      ],
+      "writes": [
+        "README.md",
+        "devpost/submission-facts.md",
+        ".prod-build/DELIVERY.md",
+        "docs/memory/**"
+      ],
+      "suite": false,
+      "acceptance": [
+        "README evidence table maps all four criteria",
+        "DELIVERY.md passes pb.py report"
+      ],
+      "verify": [
+        "python3 .prod-build/pb.py report .prod-build/DELIVERY.md"
+      ],
+      "rollback": "n/a",
+      "status": "todo",
+      "notes": "the learner writes the Devpost copy; the video link is pasted by the learner after upload"
+    }
+  ]
+}
