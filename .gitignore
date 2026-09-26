@@ -1,0 +1,10 @@
+# Devpost Learn: personal learning context stays out of commits by default
+devpost/learner-profile.md
+# local credentials (none are needed for this project); a secret-free .env.example may be committed
+.env
+.env.*
+!.env.example
+# build output and dependencies
+node_modules/
+dist/
+qa/
