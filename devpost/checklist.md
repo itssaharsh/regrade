@@ -39,13 +39,13 @@ Build mode: fast (the learner delegated the build; verification kept at every sl
   Learner check: tab from the top of the page to Generate and press Enter; use the arrow buttons to move a team.
   Commit: `Fix scrollable grid focus and error-list semantics`
 
-- [ ] **4. README, CI, ADRs and a live URL**
+- [x] **4. README, CI, ADRs and a live URL**
   Becomes usable: a public repo with a green check, a README that maps each judging criterion to evidence and says what is synthetic, and a GitHub Pages deployment.
   Why now: required deliverables a day early (video, README, live link).
   PRD ref: `prd.md > What We're Building`
   Spec ref: `spec.md > Where It Runs and How Someone Tries It`
   Build: README.md, .github/workflows/ci.yml and pages.yml, docs/adr, CLAUDE.md; `gh repo create` and push; enable Pages from the workflow.
-  Verify (mechanical): CI green; https://itssaharsh.github.io/regrade/ loads and Generate works there.
+  Verify (mechanical): CI green (typecheck, tests, validate, build); https://itssaharsh.github.io/regrade/ loads and the demo-kit probe ran 32 actions against it with 0 failures.
   Learner check: open the live URL on your phone; the Generate button sits at the bottom of the screen.
   Commit: `Add README, CI, Pages deployment and decision records`
 
@@ -56,6 +56,7 @@ Build mode: fast (the learner delegated the build; verification kept at every sl
 
 ## Revisions
 
+- 2026-09-26: grid split into one table per venue after the 1440 still showed the second venue cut off; side column narrowed so four pitch columns fit at 1280.
 - 2026-09-26: pairing algorithm replaced (rotating round robin → per-week matching) after validate showed 4 repeat pairings and a home/away gap of 4; see docs/adr/0002.
 
 ## Final Review
