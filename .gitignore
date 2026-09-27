@@ -7,4 +7,5 @@ devpost/learner-profile.md
 # build output and dependencies
 node_modules/
 dist/
-qa/
+qa/*
+!qa/shots.py
