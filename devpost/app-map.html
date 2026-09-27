@@ -5,7 +5,7 @@
 <h1>Regrade — app map</h1>
 <p>One page in the browser, no server, no model. Follow one action, <em>Generate 4 weeks</em>, through the code:</p>
 <table><tr><th>Step</th><th>Where</th><th>What happens</th></tr>
-<tr><td>1</td><td><code>src/main.ts</code> → <code>renderStageHead()</code></td><td>The button's click handler calls <code>generate(true)</code>.</td></tr>
+<tr><td>1</td><td><code>src/main.ts</code> → <code>renderStageHead()</code></td><td>The button's click handler calls <code>generate(true, true)</code>.</td></tr>
 <tr><td>2</td><td><code>src/main.ts</code> → <code>generate()</code></td><td>Calls <code>generateBlock(bands, stats, played, teams, setup)</code>, stores the block in <code>state</code>, re-renders, announces the counters in the status region.</td></tr>
 <tr><td>3</td><td><code>src/scheduler.ts</code> → <code>chooseRounds()</code></td><td>Per band, week by week: a backtracking search pairs every team once, avoiding pairings already played and pairing a team owed a home game with one owed an away game.</td></tr>
 <tr><td>4</td><td><code>src/scheduler.ts</code> → <code>generateBlock()</code></td><td>Every pairing gets a venue, pitch and time from the slots the secretary set; hard constraints checked, preferences scored; fixtures that don't fit go to <code>unscheduled</code> with a reason.</td></tr>
@@ -18,7 +18,7 @@
 <tr><td><code>src/scheduler.ts</code></td><td>Pairings and slots, constraints and counters.</td><td>tests (round robin, matching, block, shortfall), validate</td></tr>
 <tr><td><code>src/export.ts</code></td><td>fixtureupload.csv in the FA uploader's nine columns.</td><td>tests, validate</td></tr>
 <tr><td><code>src/seed.ts</code></td><td>The fictional league (deterministic PRNG) and its six Saturdays of results.</td><td>validate</td></tr>
-<tr><td><code>src/main.ts</code>, <code>index.html</code>, <code>src/style.css</code></td><td>State, rendering, drag and arrows, states via <code>?state=</code>, shortcuts, tokens.</td><td><code>qa/shots.py</code> (screenshots + axe, not committed)</td></tr></table>
+<tr><td><code>src/main.ts</code>, <code>index.html</code>, <code>src/style.css</code></td><td>State, rendering, drag and arrows, states via <code>?state=</code>, shortcuts, tokens.</td><td><code>qa/shots.py</code> (screenshots, axe and interaction checks; screenshots are not committed)</td></tr></table>
 <h2>A practice to reuse</h2>
 <p class="tip"><strong>Prove the kernel before the screen.</strong> The first slice was <code>npm run validate</code>: it seeds the league, generates a block and prints PASS or FAIL for every rule. It caught two real defects (4 repeat pairings and a home/away gap of 4) before any UI existed, and the fix is recorded in <code>docs/adr/0002-matching-not-solver-library.md</code>. Next time: write the PASS/FAIL script for the one thing that must be true, then build the screen that shows it.</p>
 <details><summary>Commands</summary><p><code>npm run dev</code> · <code>npm test</code> · <code>npm run validate</code> · <code>npm run build</code></p></details>

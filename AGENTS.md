@@ -9,5 +9,5 @@
 - A record is a hint until its cited files still match (`mem check` flags stale ones).
 - Run checks through `python3 .prod-build/pb.py run --task <ID> -- <command>` so results land in the
   evidence ledger; "done" means passing evidence exists, not that code was written.
-- Task briefs: `.prod-build/briefs/<ID>.md`. Reports: `.prod-build/reports/<ID>.md`.
+- Task plan: `.prod-build/plan.json`. Reports: `.prod-build/reports/`. Delivery: `.prod-build/DELIVERY.md`.
 <!-- /prod-build:memory-protocol -->

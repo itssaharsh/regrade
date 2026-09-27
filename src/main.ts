@@ -1,6 +1,6 @@
-import { parseResults, computeStats, playedPairs, slug, type Parsed, type ParseError } from './results.ts'
-import { proposeBands, moveTeam, bandSpread, movedTeams, divisionNames } from './banding.ts'
-import { generateBlock, slotsFor, isSaturday, parseTimes, shortfallAdvice } from './scheduler.ts'
+import { parseResults, computeStats, playedPairs, recordedDivisions, FORMULA_START, type Parsed, type ParseError } from './results.ts'
+import { proposeBands, moveTeam, bandSpread, bandScore, movedTeams, divisionNames, divisionLevels, DIVISION_GAP } from './banding.ts'
+import { generateBlock, slotsFor, saturday, parseTimes, shortfallAdvice } from './scheduler.ts'
 import { toUploaderCsv, UPLOADER_COLUMNS, fixtureRow } from './export.ts'
 import { sampleResultsCsv, sampleSetup, SAMPLE_LEAGUE } from './seed.ts'
 import type { Band, Block, Setup, TeamStats, Fixture } from './model.ts'
@@ -12,6 +12,7 @@ interface State {
   stats: Map<string, TeamStats>
   played: Set<string>
   recordedDivision: Map<string, string>
+  levelOf: (teamId: string) => number
   bands: Band[]
   setup: Setup
   block: Block | null
@@ -23,6 +24,11 @@ interface State {
   setupError: string
   animate: boolean
   dragId: string | null
+  bandCount: number
+  /** export name per band, fixed when the bands are proposed so moving a team never renames a band */
+  proposedNames: Map<string, string>
+  divisionOverride: Map<string, string>
+  importNote: string
 }
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector(sel) as T
@@ -37,17 +43,46 @@ function fromText(text: string, source: 'sample' | 'own', setup?: Setup): State 
   const parsed = parseResults(text)
   if (parsed.results.length === 0) return null
   const stats = computeStats(parsed.results, parsed.teams)
-  const recorded = new Map<string, string>()
-  for (const r of parsed.results) { recorded.set(slug(r.home), r.division); recorded.set(slug(r.away), r.division) }
+  const recorded = recordedDivisions(parsed.results)
+  const levels = divisionLevels(parsed.results.map(r => r.division))
+  const levelOf = (id: string): number => levels.get(recorded.get(id) ?? '') ?? 0
+  const bandCount = defaultBandCount(parsed.teams.length, recorded)
+  const bands = proposeBands([...stats.values()], bandCount, levelOf)
   return {
-    source, resultsText: text, parsed, stats, played: playedPairs(parsed.results), recordedDivision: recorded,
-    bands: proposeBands([...stats.values()], 3), setup: setup ?? sampleSetup(), block: null, stale: false, week: 1,
+    source, resultsText: text, parsed, stats, played: playedPairs(parsed.results), recordedDivision: recorded, levelOf,
+    bands, setup: setup ?? sampleSetup(), block: null, stale: false, week: 1,
     importOpen: false, importDraft: '', importErrors: parsed.errors, setupError: '', animate: false, dragId: null,
+    bandCount, proposedNames: divisionNames(bands, recorded), divisionOverride: new Map(), importNote: '',
   }
 }
 
+/** As many bands as the results file has divisions (2 to 5), else 3; never so many that a band has fewer than 4 teams. */
+function defaultBandCount(teams: number, recorded: Map<string, string>): number {
+  const divisions = new Set([...recorded.values()].filter(Boolean)).size
+  return Math.max(1, Math.min(divisions >= 2 && divisions <= 5 ? divisions : 3, maxBands(teams)))
+}
+const maxBands = (teams: number): number => Math.max(1, Math.min(5, Math.floor(teams / 4)))
+
+/** Has the user put work into this page that a reload would lose? */
+const hasWork = (): boolean => state.source === 'own' || state.stale || state.divisionOverride.size > 0
+
+const signed = (v: number): string => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}`
+/** The number a team is ranked by; when it differs from the raw figure, the tooltip and screen-reader text say why. */
+function statCell(s: TeamStats, level: number, division?: string): string {
+  const score = bandScore(s, level)
+  const why = level > 0 ? `${signed(s.gdPerGame)} a game in ${division ?? 'its division'}, less ${(DIVISION_GAP * level).toFixed(2)} for ${level === 1 ? 'the division' : `the ${level} divisions`} above` : 'goal difference per game'
+  return `<span class="stat num" title="${s.played} played; ${esc(why)}"><span class="sr-only">${esc(level > 0 ? `rating ${signed(score)}: ${why}` : 'goal difference per game')} </span><span aria-hidden="${level > 0}">${signed(score)}</span></span>`
+}
+
 const teamName = (id: string): string => state.parsed.teams.find(t => t.id === id)?.name ?? id
-const exportNames = (): Map<string, string> => divisionNames(state.bands, state.recordedDivision)
+/** Division name per band for the export: the name the user typed, else the majority division from the results file, else the band name. */
+const exportNames = (): Map<string, string> => {
+  const names = new Map(state.proposedNames)
+  for (const [id, name] of state.divisionOverride) if (names.has(id)) names.set(id, name)
+  return names
+}
+/** Bands that would export under their own "Band X" name, which Full-Time won't recognise. */
+const unnamedBands = (): Band[] => { const n = exportNames(); return state.bands.filter(b => n.get(b.id) === b.name) }
 
 function init(): void {
   state = fromText(sampleResultsCsv().csv, 'sample')!
@@ -62,8 +97,11 @@ function init(): void {
   }
   render()
   if (st === 'dragging') document.querySelector('.team')?.classList.add('dragging')
+  // pasted results, moves and setup edits live only in this tab: ask before a reload or the wordmark link throws them away
+  // (not under automation, where a leave prompt would stall the QA and demo scripts)
+  window.addEventListener('beforeunload', e => { if (hasWork() && !navigator.webdriver) e.preventDefault() })
   document.addEventListener('keydown', e => {
-    if (e.altKey && e.shiftKey && e.code === 'KeyR') { e.preventDefault(); reset() }
+    if (e.altKey && e.shiftKey && e.code === 'KeyR') { e.preventDefault(); if (state.source === 'sample' || confirm('Reload the sample league? Your results and changes will be lost.')) reset() }
     if (e.altKey && e.shiftKey && e.code === 'KeyG') { e.preventDefault(); generate(true, true) }
   })
 }
@@ -128,7 +166,7 @@ function renderImport(): void {
   if (!state.importOpen) {
     el.innerHTML = `<h2 id="import-h">Results</h2><p class="small">${summary}</p>
       <div class="row"><button class="btn small" type="button" id="own">Use your own results</button>${state.source === 'own' ? '<button class="btn small ghost" type="button" id="sample">Load sample results</button>' : ''}</div>`
-    $('#own').addEventListener('click', () => { state.importOpen = true; state.importDraft = state.source === 'own' ? state.resultsText : ''; state.importErrors = []; render(); $('#draft').focus() })
+    $('#own').addEventListener('click', () => { state.importOpen = true; state.importDraft = state.source === 'own' ? state.resultsText : ''; state.importErrors = []; state.importNote = ''; render(); $('#draft').focus() })
     document.querySelector('#sample')?.addEventListener('click', () => reset())
     return
   }
@@ -137,6 +175,7 @@ function renderImport(): void {
     <label class="sr-only" for="draft">Results</label>
     <textarea id="draft" placeholder="Date,Time,Division,Home Team,Away Team,Venue,Pitch,Home Score,Away Score&#10;12/09/2026,09:00,Division 1,Oakford Colts Reds,Ashby Lions Blues,Oakford Leisure Centre,Pitch 1,3,1" aria-describedby="draft-help${state.importErrors.length ? ' draft-errors' : ''}"${state.importErrors.length ? ' aria-invalid="true"' : ''}>${esc(state.importDraft)}</textarea>
     <p id="draft-help" class="caption">Dates as DD/MM/YYYY. Team names must match between rows. The Division column names the divisions your export will use.</p>
+    ${state.importNote ? `<p class="small load-note">${esc(state.importNote)}</p>` : ''}
     ${state.importErrors.length ? `<div role="alert" id="draft-errors"><ul class="errors">${state.importErrors.slice(0, 6).map(e => `<li>${esc(e.message)}</li>`).join('')}${state.importErrors.length > 6 ? `<li>and ${state.importErrors.length - 6} more</li>` : ''}</ul></div>` : ''}
     <div class="row"><button class="btn small" type="button" id="load">Load results</button><button class="btn small ghost" type="button" id="sample">Load sample results</button><button class="btn small ghost" type="button" id="cancel">Cancel</button></div>`
   const ta = $('#draft') as HTMLTextAreaElement
@@ -146,12 +185,13 @@ function renderImport(): void {
     if (parsed.results.length === 0) { state.importErrors = parsed.errors.length ? parsed.errors : [{ row: 0, message: 'No results found' }]; render(); $('#draft').focus(); return }
     state = fromText(ta.value, 'own', state.setup)!
     state.importErrors = parsed.errors
-    if (parsed.errors.length) { state.importOpen = true; state.importDraft = ta.value }
+    const note = `Loaded ${parsed.results.length} results for ${parsed.teams.length} teams.${parsed.errors.length ? ` These ${parsed.errors.length} row${parsed.errors.length === 1 ? ' was' : 's were'} skipped:` : ''}`
+    if (parsed.errors.length) { state.importOpen = true; state.importDraft = ta.value; state.importNote = note }
     render()
-    say(`Loaded ${parsed.results.length} results for ${parsed.teams.length} teams${parsed.errors.length ? `, ${parsed.errors.length} rows skipped` : ''}.`)
+    say(note.replace(/:$/, '.'))
   })
   $('#sample').addEventListener('click', () => reset())
-  $('#cancel').addEventListener('click', () => { state.importOpen = false; render(); $('#own').focus() })
+  $('#cancel').addEventListener('click', () => { state.importOpen = false; state.importNote = ''; render(); $('#own').focus() })
 }
 
 function renderSlots(): void {
@@ -160,6 +200,7 @@ function renderSlots(): void {
   const n = slotsFor(s).length
   el.innerHTML = `<h2 id="slots-h">Pitch slots</h2>
     <p class="small muted"><b class="num">${n}</b> slots per Saturday across ${s.venues.length} venue${s.venues.length === 1 ? '' : 's'}.</p>
+    ${state.source === 'own' && JSON.stringify(s) === JSON.stringify(sampleSetup()) ? '<p class="small hint">These are the sample\'s grounds, times and date. Set your own before you generate: the export uses these venue names.</p>' : ''}
     ${s.venues.map((v, vi) => `<div class="venue">
       <label class="sr-only" for="vname-${vi}">Venue ${vi + 1} name</label>
       <input class="vname" id="vname-${vi}" data-vname="${vi}" type="text" value="${esc(v.name)}" autocomplete="off">
@@ -168,7 +209,7 @@ function renderSlots(): void {
     </div>`).join('')}
     <div class="row"><button type="button" class="btn small ghost" id="add-venue" ${s.venues.length >= 6 ? 'aria-disabled="true"' : ''}>Add a venue</button></div>
     <div class="field"><label for="times">Kick-off times</label><input id="times" type="text" inputmode="numeric" value="${esc(s.times.join(', '))}" autocomplete="off" aria-describedby="times-help${state.setupError.startsWith('times:') ? ' setup-error' : ''}"><span id="times-help" class="caption">24-hour, comma-separated</span></div>
-    <div class="field"><label for="first">First Saturday</label><input id="first" type="date" value="${s.firstSaturday}"${state.setupError.startsWith('first:') ? ' aria-invalid="true" aria-describedby="setup-error"' : ''}></div>
+    <div class="field"><label for="first">First Saturday</label><select id="first">${saturdayOptions(s.firstSaturday).map(d => `<option value="${d}"${d === s.firstSaturday ? ' selected' : ''}>${toUk(d)}</option>`).join('')}</select></div>
     ${state.setupError ? `<p class="reason" id="setup-error" role="alert">${esc(state.setupError.replace(/^\w+:\s*/, ''))}</p>` : ''}`
   const setError = (msg: string): void => { state.setupError = msg; render() }
   el.querySelectorAll<HTMLButtonElement>('button[data-v]').forEach(b => b.addEventListener('click', () => {
@@ -181,6 +222,7 @@ function renderSlots(): void {
   el.querySelectorAll<HTMLInputElement>('input[data-vname]').forEach(inp => inp.addEventListener('change', () => {
     const i = Number(inp.dataset.vname), name = inp.value.trim()
     if (!name) return setError('vname: A venue needs a name.')
+    if (FORMULA_START.test(name)) return setError(`vname: ${name} starts with =, +, - or @ and would run as a spreadsheet formula in the export.`)
     if (s.venues.some((v, j) => j !== i && v.name.toLowerCase() === name.toLowerCase())) return setError(`vname: There is already a venue called ${name}.`)
     s.venues[i].name = name; state.setupError = ''; markStale(); render()
   }))
@@ -204,31 +246,50 @@ function renderSlots(): void {
     s.times = times; state.setupError = ''; markStale(); render()
     say(`Kick-off times: ${times.join(', ')}.`)
   })
-  ;($('#first') as HTMLInputElement).addEventListener('change', e => {
-    const v = (e.target as HTMLInputElement).value
-    if (!isSaturday(v)) {
-      const day = /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(v + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' }) : 'not a date'
-      return setError(`first: ${toUk(v, false)} is a ${day}. Pick a Saturday; the block still starts ${toUk(s.firstSaturday)}.`)
-    }
-    s.firstSaturday = v; state.setupError = ''; markStale(); render()
+  ;($('#first') as HTMLSelectElement).addEventListener('change', e => {
+    s.firstSaturday = (e.target as HTMLSelectElement).value; state.setupError = ''; markStale(); render()
+    say(`The block starts ${toUk(s.firstSaturday)}.`)
   })
 }
 
 function renderBands(): void {
   const el = $('#bands')
-  const moved = movedTeams(state.bands, state.recordedDivision)
   const names = exportNames()
+  const moved = movedTeams(state.bands, state.recordedDivision, names)
+  const auto = state.proposedNames
+  const most = maxBands(state.parsed.teams.length)
   el.innerHTML = `<h2 id="bands-h">Bands by goals per game</h2>
-    <p class="small muted">Ordered by goal difference per game; spread is the gap between a band's strongest and weakest team. Drag a team between bands, or use the arrows. <b class="num">${moved}</b> team${moved === 1 ? '' : 's'} change division against the results file.</p>
+    <p class="small muted">Ranked by goal difference per game${new Set(state.recordedDivision.values()).size > 1 ? `, with each division above counted as ${DIVISION_GAP} goals a game stronger` : ''}. Spread is the gap between a band's strongest and weakest team. Drag teams between bands, or use the arrows. <b class="num">${moved}</b> team${moved === 1 ? '' : 's'} change division; each shows the one it was in.</p>
+    ${state.parsed.teams.length > 1 && new Set([...state.stats.values()].map(t => t.gdPerGame)).size === 1 ? '<p class="small hint">Every team has the same goal difference per game, so the results can\'t rank them and the bands below are in name order. Move teams by hand.</p>' : ''}
+    <div class="field band-count"><span id="bc-label">Bands</span><span class="stepper" role="group" aria-labelledby="bc-label"><button type="button" id="bc-down" aria-label="One band fewer"${state.bandCount <= 1 ? ' aria-disabled="true"' : ''}>−</button><output class="num" aria-live="off">${state.bandCount}</output><button type="button" id="bc-up" aria-label="One band more"${state.bandCount >= most ? ' aria-disabled="true"' : ''}>+</button></span><span class="caption">Changing the count re-proposes the bands and clears your moves.</span></div>
     ${state.bands.map((b, bi) => {
-      const spread = bandSpread(b, state.stats)
+      const spread = bandSpread(b, state.stats, state.levelOf)
       const exportAs = names.get(b.id) ?? b.name
-      return `<section class="band" data-band="${b.id}" aria-labelledby="bh-${b.id}"><div class="band-head"><h3 id="bh-${b.id}"><span class="swatch ${BAND_CLASS[bi]}" aria-hidden="true">${b.name.slice(-1)}</span>${esc(b.name)}</h3><span class="spread num">${b.teamIds.length} teams${b.teamIds.length % 2 ? ' (one bye a week)' : ''}, spread ${spread.toFixed(2)}</span>${exportAs !== b.name ? `<span class="exports">exports as ${esc(exportAs)}</span>` : ''}</div>
+      const needsName = auto.get(b.id) === b.name
+      const nameField = needsName ? `<span class="div-name"><label for="dn-${b.id}">Full-Time division</label><input id="dn-${b.id}" data-divname="${b.id}" type="text" autocomplete="off" value="${esc(state.divisionOverride.get(b.id) ?? '')}" placeholder="e.g. Division ${bi + 1}"${exportAs === b.name ? ' aria-invalid="true" aria-describedby="dn-help-' + b.id + '"' : ''}>${exportAs === b.name ? `<span class="caption" id="dn-help-${b.id}">Your results have no division for this band: name it as it appears in Full-Time.</span>` : ''}</span>` : ''
+      return `<section class="band" data-band="${b.id}" aria-labelledby="bh-${b.id}"><div class="band-head"><h3 id="bh-${b.id}"><span class="swatch ${BAND_CLASS[bi]}" aria-hidden="true">${b.name.slice(-1)}</span>${esc(b.name)}</h3><span class="spread num">${b.teamIds.length} team${b.teamIds.length === 1 ? '' : 's'}${b.teamIds.length % 2 && b.teamIds.length > 1 ? ' (one bye a week)' : ''}, spread ${spread.toFixed(2)}</span>${!needsName ? `<span class="exports">exports as ${esc(exportAs)}</span>` : nameField}</div>
         <ul class="band-list" data-band="${b.id}" aria-label="${esc(b.name)}">${b.teamIds.map(id => {
           const s = state.stats.get(id)!
-          return `<li class="team" draggable="true" data-id="${id}"><span class="handle" aria-hidden="true">⠿</span><span class="name">${esc(teamName(id))}</span><span class="stat num" title="${s.played} played, goal difference per game"><span class="sr-only">goal difference per game </span>${s.gdPerGame >= 0 ? '+' : '−'}${Math.abs(s.gdPerGame).toFixed(2)}</span><span class="move">${bi > 0 ? `<button type="button" data-up="${id}" aria-label="Move ${esc(teamName(id))} up to ${esc(state.bands[bi - 1].name)}">↑</button>` : ''}${bi < state.bands.length - 1 ? `<button type="button" data-down="${id}" aria-label="Move ${esc(teamName(id))} down to ${esc(state.bands[bi + 1].name)}">↓</button>` : ''}</span></li>`
+          const was = state.recordedDivision.get(id)
+          const tag = was && was !== exportAs ? `<span class="was">was ${esc(was)}</span>` : ''
+          return `<li class="team" draggable="true" data-id="${id}"><span class="handle" aria-hidden="true">⠿</span><span class="name">${esc(teamName(id))}${tag}</span>${statCell(s, state.levelOf(id), was)}<span class="move">${bi > 0 ? `<button type="button" data-up="${id}" aria-label="Move ${esc(teamName(id))} up to ${esc(state.bands[bi - 1].name)}">↑</button>` : ''}${bi < state.bands.length - 1 ? `<button type="button" data-down="${id}" aria-label="Move ${esc(teamName(id))} down to ${esc(state.bands[bi + 1].name)}">↓</button>` : ''}</span></li>`
         }).join('')}</ul></section>`
     }).join('')}`
+  const setCount = (n: number): void => {
+    if (n < 1 || n > most || n === state.bandCount) return
+    state.bandCount = n; state.bands = proposeBands([...state.stats.values()], n, state.levelOf)
+    state.proposedNames = divisionNames(state.bands, state.recordedDivision); state.divisionOverride.clear(); markStale(); render()
+    say(`${n} band${n === 1 ? '' : 's'} proposed.`)
+  }
+  $('#bc-down').addEventListener('click', () => setCount(state.bandCount - 1))
+  $('#bc-up').addEventListener('click', () => setCount(state.bandCount + 1))
+  el.querySelectorAll<HTMLInputElement>('input[data-divname]').forEach(inp => inp.addEventListener('change', () => {
+    const id = inp.dataset.divname!, name = inp.value.trim()
+    if (FORMULA_START.test(name)) { say(`${name} starts with =, +, - or @ and would run as a spreadsheet formula; not used.`); render(); return }
+    if (name) state.divisionOverride.set(id, name); else state.divisionOverride.delete(id)
+    markStale(); render()
+    say(name ? `${state.bands.find(b => b.id === id)?.name} exports as ${name}.` : 'Division name cleared.')
+  }))
   el.querySelectorAll<HTMLButtonElement>('button[data-up]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.up!; const bi = state.bands.findIndex(x => x.teamIds.includes(id)); onMove(id, state.bands[bi - 1].id)
   }))
@@ -281,6 +342,12 @@ function renderStageHead(): void {
     chip('Repeat pairings', c ? c.repeats : null, c ? c.repeats === 0 : undefined),
     chip('Home/away gap', c ? c.maxHomeAwayGap : null, c ? c.maxHomeAwayGap <= 1 : undefined),
   ].join('')
+  const why = $('#why')
+  const bad = c && (c.clashes > 0 || c.repeats > 0 || c.maxHomeAwayGap > 1)
+  // a red chip says what went wrong and where: the band lines of the solver log that relaxed a rule
+  const lines = bad ? state.block!.log.filter(l => /relaxed|[1-9]\d* repeat/.test(l)) : []
+  why.hidden = !bad
+  why.innerHTML = bad ? `${lines.map(l => esc(l)).join('<br>')}${lines.length ? '<br>' : ''}Small bands run out of new opponents: fewer, larger bands (Bands −) avoid this.` : ''
   const btn = $('#generate') as HTMLButtonElement
   btn.textContent = state.block && state.stale ? `Regenerate ${n} weeks` : `Generate ${n} weeks`
   btn.onclick = () => generate(true, true)
@@ -294,30 +361,42 @@ const MINI = `<svg class="mini" viewBox="0 0 120 22" aria-hidden="true"><rect x=
 function renderGrid(): void {
   const el = $('#grid')
   const block = state.block
+  // a block is drawn in the slots it was generated for; the current setup applies from the next Generate (the stale line says so)
+  const setup = block?.setup ?? state.setup
   const wk = block ? block.fixtures.filter(f => f.week === state.week) : []
   const by = new Map<string, Fixture>()
   for (const f of wk) by.set(`${f.venue}|${f.pitch}|${f.time}`, f)
   const bandIdx = (bandId: string): number => Math.max(0, state.bands.findIndex(b => b.id === bandId))
-  const date = block ? (wk[0]?.date ?? '') : state.setup.firstSaturday
+  const date = block ? (wk[0]?.date ?? '') : setup.firstSaturday
   let order = 0
   const perWeek = state.bands.reduce((a, b) => a + Math.floor(b.teamIds.length / 2), 0)
-  const intro = block ? '' : `<p class="grid-first"><strong>Generate to fill ${state.setup.weeks} weeks.</strong> ${perWeek} fixtures a week into ${slotsFor(state.setup).length} slots.</p>`
-  el.innerHTML = intro + state.setup.venues.map(v => `<div class="gtable" role="region" aria-label="${esc(v.name)} fixtures" tabindex="0"><table class="grid${block ? '' : ' empty'}">
+  const intro = block ? '' : `<p class="grid-first"><strong>Generate to fill ${setup.weeks} weeks.</strong> ${perWeek} fixtures a week into ${slotsFor(setup).length} slots.</p>`
+  el.innerHTML = intro + setup.venues.map(v => `<div class="gtable" role="region" aria-label="${esc(v.name)} fixtures" tabindex="0"><table class="grid${block ? '' : ' empty'}">
     <caption class="venue-h">${esc(v.name)}</caption>
     <thead><tr><th scope="col" class="date-h">${date ? esc(toUk(date)) : ''}</th>${v.pitches.map(p => `<th scope="col" class="pitch-h">${MINI}${esc(p)}</th>`).join('')}</tr></thead>
-    <tbody>${state.setup.times.map(time => `<tr><th scope="row" class="time num">${time}</th>${v.pitches.map(p => {
+    <tbody>${setup.times.map(time => `<tr><th scope="row" class="time num">${time}</th>${v.pitches.map(p => {
       if (!block) return `<td class="cell"><span class="empty-cell" aria-hidden="true">—</span><span class="sr-only">empty</span></td>`
       const f = by.get(`${v.name}|${p}|${time}`)
       if (!f) return `<td class="cell"><span class="empty-cell">free</span></td>`
       const i = order++
       const bi = bandIdx(f.band)
       const band = state.bands[bi]?.name ?? f.division
-      return `<td class="cell"><div class="fx ${state.animate ? 'enter' : ''}" style="animation-delay:${i * 40}ms"><div class="pair"><span class="swatch ${BAND_CLASS[bi]}" aria-hidden="true">${esc(band.slice(-1))}</span><span class="sr-only">${esc(band)}: </span><span class="tn" title="${esc(teamName(f.homeId))}">${esc(teamName(f.homeId))}</span></div><div class="pair"><span class="swatch" style="visibility:hidden" aria-hidden="true">v</span><span class="sr-only"> versus </span><span class="tn" title="${esc(teamName(f.awayId))}">${esc(teamName(f.awayId))}</span></div></div></td>`
+      return `<td class="cell"><div class="fx ${state.animate ? 'enter' : ''}" style="animation-delay:${i * 40}ms"><div class="pair"><span class="swatch ${BAND_CLASS[bi]}" aria-hidden="true">${esc(band.slice(-1))}</span><span class="sr-only">${esc(band)}: </span><span class="tn" title="${esc(teamName(f.homeId))}">${esc(teamName(f.homeId))}</span></div><div class="pair"><span class="swatch vs" aria-hidden="true">v</span><span class="sr-only"> versus </span><span class="tn" title="${esc(teamName(f.awayId))}">${esc(teamName(f.awayId))}</span></div></div></td>`
     }).join('')}</tr>`).join('')}</tbody></table></div>`).join('')
 }
 
+/** The Saturdays a block can start on: from this coming Saturday (or the current choice, if earlier) for 30 weeks. */
+function saturdayOptions(current: string): string[] {
+  const d = new Date(); const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate() + ((6 - d.getDay() + 7) % 7)))
+  const next = t.toISOString().slice(0, 10)
+  const start = current && current < next ? current : next
+  const out = Array.from({ length: 30 }, (_, i) => saturday(start, i))
+  if (current && !out.includes(current)) out.push(current)
+  return out
+}
+
 function toUk(iso: string, withDay = true): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso || 'That'
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
   const [y, m, d] = iso.split('-')
   const day = new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })
   return withDay ? `${day} ${d}/${m}/${y}` : `${d}/${m}/${y}`
@@ -328,7 +407,7 @@ function renderByes(): void {
   if (!state.block || state.block.byes.length === 0) { el.innerHTML = ''; return }
   const wk = state.block.byes.filter(b => b.week === state.week)
   const bandOf = (id: string): string => state.bands.find(b => b.teamIds.includes(id))?.name ?? ''
-  el.innerHTML = `<p class="byes"><b>Bye this Saturday:</b> ${wk.map(b => `${esc(teamName(b.teamId))} (${esc(bandOf(b.teamId))})`).join(', ') || 'none'}. <span class="muted">Bands with an odd number of teams rest one team each week, a different team every week.</span></p>`
+  el.innerHTML = `<p class="byes"><b>Bye this Saturday:</b> ${wk.map(b => `${esc(teamName(b.teamId))} (${esc(bandOf(b.teamId))})`).join(', ') || 'none'}. <span class="muted">Bands with an odd number of teams rest one team each week, in turn.</span></p>`
 }
 
 function renderUnscheduled(): void {
@@ -336,10 +415,10 @@ function renderUnscheduled(): void {
   if (!state.block || state.block.unscheduled.length === 0) { el.innerHTML = ''; return }
   const b = state.block
   const thisWeek = b.unscheduled.filter(u => u.week === state.week)
-  const pitches = state.setup.venues.reduce((a, v) => a + v.pitches.length, 0)
-  const advice = shortfallAdvice(b.neededPerWeek, b.slotsPerWeek, state.setup.times.length, pitches)
+  const pitches = b.setup.venues.reduce((a, v) => a + v.pitches.length, 0)
+  const advice = shortfallAdvice(b.neededPerWeek, b.slotsPerWeek, b.setup.times.length, pitches)
   el.innerHTML = `<div class="unsched" role="alert"><h3>${thisWeek.length} fixture${thisWeek.length === 1 ? '' : 's'} don't fit this Saturday</h3>
-    <p>${b.neededPerWeek} fixtures are needed each Saturday and there are ${b.slotsPerWeek} slots: ${b.unscheduled.length} don't fit across the ${state.setup.weeks} weeks. ${advice}</p>
+    <p>${b.neededPerWeek} fixtures are needed each Saturday and there are ${b.slotsPerWeek} slots: ${b.unscheduled.length} don't fit across the ${b.setup.weeks} weeks. ${advice}</p>
     <ul>${thisWeek.map(u => `<li>${esc(teamName(u.homeId))} v ${esc(teamName(u.awayId))} (${esc(state.bands.find(x => x.id === u.band)?.name ?? u.division)})</li>`).join('')}${thisWeek.length === 0 ? '<li>None this week</li>' : ''}</ul></div>`
 }
 
@@ -348,16 +427,32 @@ function renderExport(): void {
   if (!state.block || state.block.fixtures.length === 0) { el.innerHTML = ''; el.hidden = true; return }
   el.hidden = false
   const rows = [...state.block.fixtures].sort((a, b) => a.week - b.week || a.time.localeCompare(b.time) || a.venue.localeCompare(b.venue) || a.pitch.localeCompare(b.pitch)).slice(0, 8)
-  el.innerHTML = `<h2 id="export-h">Export</h2><p class="small muted">fixtureupload.csv in the Full-Time uploader's nine columns, with each band under its division name from your results. Showing 8 of ${state.block.fixtures.length} rows.</p>
+  const b = state.block
+  const unnamed = new Set(unnamedBands().map(x => x.id))
+  const stillBand = [...new Set(b.fixtures.filter(f => unnamed.has(f.band) || f.division === state.bands.find(x => x.id === f.band)?.name).map(f => f.division))]
+  const notes = [
+    state.stale ? '<p class="reason" role="alert">This file is from before your changes. Regenerate first.</p>' : '',
+    b.unscheduled.length ? `<p class="small">${b.fixtures.length} of ${b.fixtures.length + b.unscheduled.length} fixtures: the ${b.unscheduled.length} that don't fit are not in this file.</p>` : '',
+    stillBand.length ? `<p class="small warn">${stillBand.map(esc).join(', ')} ${stillBand.length === 1 ? 'is' : 'are'} not a Full-Time division: name ${stillBand.length === 1 ? 'it' : 'them'} on the band${stillBand.length === 1 ? '' : 's'}, then regenerate.</p>` : '',
+  ].join('')
+  el.innerHTML = `<h2 id="export-h">Export</h2><p class="small muted">fixtureupload.csv in the Full-Time uploader's nine-column layout (FA guide v5.1), each band under its division name. Showing 8 of ${b.fixtures.length} rows.</p>${notes}
     <div class="csv" role="region" aria-label="CSV preview" tabindex="0"><table><thead><tr>${UPLOADER_COLUMNS.map(c => `<th scope="col">${c}</th>`).join('')}</tr></thead><tbody>${rows.map(f => `<tr>${fixtureRow(f, teamName).map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="row"><button class="btn" type="button" id="download">Download fixtureupload.csv</button><button class="btn ghost" type="button" id="copy">Copy CSV</button></div>`
   const csv = toUploaderCsv(state.block, teamName)
+  if (state.stale) for (const id of ['#download', '#copy']) $(id).setAttribute('aria-disabled', 'true')
+  const blocked = (): boolean => { if (state.stale) say('This file is from before your changes. Regenerate first.'); return state.stale }
   $('#download').addEventListener('click', () => {
+    if (blocked()) return
     const blob = new Blob([csv], { type: 'text/csv' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'fixtureupload.csv'; document.body.appendChild(a); a.click(); a.remove()
     const b = $('#download'); b.textContent = 'Downloaded'; say('fixtureupload.csv downloaded.'); setTimeout(() => { b.textContent = 'Download fixtureupload.csv' }, 2000)
   })
-  $('#copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(csv); say('CSV copied.') } catch { say('Copy failed; use Download.') } })
+  $('#copy').addEventListener('click', async () => {
+    if (blocked()) return
+    const c = $('#copy')
+    try { await navigator.clipboard.writeText(csv); c.textContent = 'Copied'; say('CSV copied.') } catch { c.textContent = 'Copy failed, use Download'; say('Copy failed; use Download.') }
+    setTimeout(() => { c.textContent = 'Copy CSV' }, 2000)
+  })
 }
 
 function renderLog(): void {

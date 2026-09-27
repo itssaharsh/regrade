@@ -30,10 +30,10 @@ White canvas, black ink, cone orange (`#EE5A24`) for the one primary button, ban
 Parses CSV rows (quotes respected), detects the uploader or simple layout by header names, normalises dates, builds the team list and per-team tally, and the set of pairings already played. PRD ref: `prd.md > Results in`.
 
 ### Bander (`src/banding.ts`)
-`proposeBands`, `moveTeam`, `bandSpread`, `movedTeams`. PRD ref: `prd.md > Banding`.
+`proposeBands` (goal difference per game, each division above counted as `DIVISION_GAP` = 2 goals a game stronger because results only come from games inside a division; docs/adr/0004), `divisionLevels`, `bandScore`, `moveTeam`, `bandSpread`, `divisionNames`, `movedTeams`. PRD ref: `prd.md > Banding`.
 
 ### Scheduler (`src/scheduler.ts`)
-`circleRounds` (kept for tests and as the classic reference), `chooseRounds` (per-week matching with backtracking: no repeats, balanced home/away, relaxed in steps and reported), `generateBlock` (slots, preferences, unscheduled list, log), `countConstraints` (independent recount). PRD ref: `prd.md > Generating the block`.
+`circleRounds` (used by the seed to build the sample season, and by tests), `chooseRounds` (per-week matching with backtracking: no repeats, balanced home/away, relaxed in steps and reported), `generateBlock` (slots, preferences, unscheduled list, log), `countConstraints` (independent recount). PRD ref: `prd.md > Generating the block`.
 
 ### Exporter (`src/export.ts`)
 `UPLOADER_COLUMNS`, `toUploaderCsv`, `fixtureRow`. PRD ref: `prd.md > Export`.
@@ -61,8 +61,9 @@ regrade/
 │   ├── export.ts         # fixtureupload.csv
 │   └── seed.ts           # fictional league
 ├── scripts/validate.ts   # PASS/FAIL proof on the seed
-├── tests/scheduler.test.ts
-├── public/icon.svg
+├── tests/                # scheduler, byes and rules tests
+├── qa/                   # shots.py (screenshots, axe, interactions), live-demo.py
+├── public/               # icon.svg, 404.html, fonts/ (self-hosted woff2)
 ├── devpost/              # Devpost learning workspace
 ├── UI-SPEC.md, BUILD-PLAN.md, docs/adr/
 └── .github/workflows/    # ci.yml, pages.yml

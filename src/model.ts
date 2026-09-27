@@ -7,7 +7,7 @@ export interface Slot { venue: string; pitch: string; time: string }
 export interface Fixture { week: number; date: string; time: string; band: string; division: string; homeId: string; awayId: string; venue: string; pitch: string }
 export interface Unscheduled { week: number; band: string; division: string; homeId: string; awayId: string; reason: string }
 export interface Counters { clashes: number; repeats: number; maxHomeAwayGap: number; unscheduled: number; teamWeekViolations: number }
-export interface Block { fixtures: Fixture[]; unscheduled: Unscheduled[]; counters: Counters; log: string[]; slotsPerWeek: number; neededPerWeek: number; byes: { week: number; teamId: string }[] }
+export interface Block { fixtures: Fixture[]; unscheduled: Unscheduled[]; counters: Counters; log: string[]; slotsPerWeek: number; neededPerWeek: number; byes: { week: number; teamId: string }[]; setup: Setup }
 export interface Setup { venues: Venue[]; times: string[]; weeks: number; firstSaturday: string }
 export const pairKey = (a: string, b: string): string => (a < b ? `${a}|${b}` : `${b}|${a}`)
 export const slotKey = (s: Slot): string => `${s.venue}|${s.pitch}|${s.time}`

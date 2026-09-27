@@ -5,7 +5,8 @@ export const UPLOADER_COLUMNS = ['Date', 'Time', 'Division', 'Home Team', 'Away 
 
 export const toDdMmYyyy = (iso: string): string => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}` }
 
-const q = (s: string): string => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s)
+// inputs are checked for formula-leading text where they're typed; this is the last line of defence at the file itself
+const q = (raw: string): string => { const s = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw; return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s }
 
 export function fixtureRow(f: Fixture, name: (id: string) => string): string[] {
   return [toDdMmYyyy(f.date), f.time, f.division, name(f.homeId), name(f.awayId), f.venue, f.pitch, '', '']

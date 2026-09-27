@@ -1,5 +1,7 @@
 # Build plan — Regrade (hackathon-build, adapted to a 6–12 h solo build for Devpost "Build With AI: Basics")
 
+> Historical: this is the plan as written before the build. The scheduler, tests and file list changed during it; ARCHITECTURE.md and docs/adr describe what was built.
+
 Eligibility first: the project starts in this empty folder (created 2026-09-26, inside the submission period), is planned and built through the Devpost Learn skill pack (1-start → 6-ship; the learner delegated the interviews and the build to the agent, so the planning documents are agent-drafted and stay status: draft until the learner reads them and approves), and commits devpost/scope.md, prd.md, spec.md, checklist.md and app-map.html. This plan and UI-SPEC.md are inputs to those interviews, not substitutes.
 
 ## R13 Demo script before code

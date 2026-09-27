@@ -38,10 +38,11 @@ export function seededShuffle(ids: string[]): string[] {
 /**
  * Choose the block's pairings week by week as a perfect matching that (1) never repeats a pairing already played this season
  * or earlier in the block, and (2) keeps every team's block home/away gap within one, by pairing a team that is "owed" a home game
- * with one that is owed an away game. Backtracking over partners in a fixed order keeps it deterministic. If the strict search
- * fails for a week, the balance constraint is relaxed; if that fails too, played pairings are allowed and counted as repeats.
+ * with one that is owed an away game. Backtracking over partners in a seeded order keeps it deterministic. Each week tries four
+ * tiers: strict; balance relaxed; season repeats allowed; block repeats allowed (tiny bands). A tier is skipped at once if some
+ * team has no allowed partner, and abandoned after STEP_BUDGET search steps; every relaxation and repeat is counted.
  */
-export function chooseRounds(ids: string[], played: Set<string>, weeks: number): { rounds: Pair[][]; repeats: number; relaxed: number } {
+export function chooseRounds(ids: string[], played: Set<string>, weeks: number): { rounds: Pair[][]; repeats: number; relaxed: number; budgetStops: number } {
   const teams = seededShuffle([...ids].sort())
   if (teams.length % 2 === 1) teams.push(BYE)
   // partner order comes from a seeded shuffle, not the alphabet, so same-club teams (adjacent by name) are not paired first
@@ -49,41 +50,54 @@ export function chooseRounds(ids: string[], played: Set<string>, weeks: number):
   const rounds: Pair[][] = []
   const used = new Set<string>()
   const balance = new Map<string, number>(teams.map(t => [t, 0]))
-  let repeats = 0, relaxed = 0
+  let repeats = 0, relaxed = 0, budgetStops = 0
   for (let w = 0; w < weeks; w++) {
     const tryMatch = (strictBalance: boolean, allowPlayed: boolean, allowUsed = false): Pair[] | null => {
       const order = [...teams].sort((a, b) => Math.abs(balance.get(b)!) - Math.abs(balance.get(a)!) || rank.get(a)! - rank.get(b)!)
-      const res: Pair[] = []
-      const taken = new Set<string>()
-      const allowed = (a: string, b: string): boolean => {
+      const n = order.length
+      const bal = order.map(t => balance.get(t)!)
+      const bye = order.map(t => t === BYE)
+      // who may meet whom in this tier, worked out once so the search itself only touches arrays
+      const ok = order.map((a, i) => order.map((b, j) => {
+        if (i === j) return false
         const k = pairKey(a, b)
         if (!allowUsed && used.has(k)) return false
-        if (!allowPlayed && a !== BYE && b !== BYE && played.has(k)) return false
-        return true
-      }
+        return allowPlayed || bye[i] || bye[j] || !played.has(k)
+      }))
+      // in a relaxed tier, a pairing that is neither played nor already used this block is still tried first
+      const fresh = order.map((a, i) => order.map((b, j) => ok[i][j] && (bye[i] || bye[j] || !(played.has(pairKey(a, b)) || used.has(pairKey(a, b))))))
       // precheck: a team with no allowed partner makes this tier impossible; skip it instead of searching
-      if (order.some(a => !order.some(b => b !== a && allowed(a, b)))) return null
+      if (ok.some(row => !row.includes(true))) return null
+      const res: Pair[] = []
+      const taken = new Array<boolean>(n).fill(false)
       let steps = 0
       const rec = (): boolean => {
         if (++steps > STEP_BUDGET) return false
-        const a = order.find(t => !taken.has(t))
-        if (!a) return true
-        taken.add(a)
-        for (const b of order) {
-          if (taken.has(b)) continue
-          const k = pairKey(a, b)
-          if (!allowUsed && used.has(k)) continue
-          if (!allowPlayed && a !== BYE && b !== BYE && played.has(k)) continue
-          if (strictBalance && a !== BYE && b !== BYE && balance.get(a)! === balance.get(b)! && balance.get(a) !== 0) continue
-          taken.add(b); res.push([a, b])
-          if (rec()) return true
-          taken.delete(b); res.pop()
+        // most constrained first: the untaken team with the fewest allowed partners left (ties keep the balance and seeded
+        // order), so a dead end shows up at once instead of after a long search
+        let ai = -1, fewest = Infinity
+        for (let i = 0; i < n; i++) {
+          if (taken[i]) continue
+          let c = 0
+          for (let j = 0; j < n; j++) if (!taken[j] && ok[i][j]) c++
+          if (c < fewest) { fewest = c; ai = i }
         }
-        taken.delete(a)
+        if (ai < 0) return true
+        if (fewest === 0) return false
+        taken[ai] = true
+        for (const wantFresh of [true, false]) for (let bi = 0; bi < n; bi++) {
+          if (taken[bi] || !ok[ai][bi] || fresh[ai][bi] !== wantFresh) continue
+          if (strictBalance && !bye[ai] && !bye[bi] && bal[ai] === bal[bi] && bal[ai] !== 0) continue
+          taken[bi] = true; res.push([order[ai], order[bi]])
+          if (rec()) return true
+          taken[bi] = false; res.pop()
+        }
+        taken[ai] = false
         return false
       }
-      const ok = rec()
-      return ok && steps <= STEP_BUDGET ? res : null
+      const found = rec()
+      if (steps > STEP_BUDGET) budgetStops++
+      return found ? res : null
     }
     // tiers: strict → balance relaxed → season repeats allowed → block repeats allowed (small bands); each relaxation is counted
     let pairs = tryMatch(true, false)
@@ -107,7 +121,7 @@ export function chooseRounds(ids: string[], played: Set<string>, weeks: number):
     }
     rounds.push(oriented)
   }
-  return { rounds, repeats, relaxed }
+  return { rounds, repeats, relaxed, budgetStops }
 }
 
 export function slotsFor(setup: Setup): Slot[] {
@@ -143,7 +157,7 @@ export function generateBlock(bands: Band[], stats: Map<string, TeamStats>, play
   bands.forEach((band, bi) => {
     const { rounds, repeats: rep, relaxed } = chooseRounds(band.teamIds, played, setup.weeks)
     repeats += rep
-    log.push(`${band.name}: ${band.teamIds.length} teams, ${rounds.length} weeks of pairings, ${rep} repeat pairing${rep === 1 ? '' : 's'} against this season${relaxed ? `, ${relaxed} week${relaxed === 1 ? '' : 's'} with a relaxed constraint` : ''}`)
+    log.push(`${band.name}: ${band.teamIds.length} teams, ${rounds.length} weeks of pairings, ${rep} repeat pairing${rep === 1 ? '' : 's'} (with this season or within the block)${relaxed ? `, ${relaxed} week${relaxed === 1 ? '' : 's'} with a relaxed constraint` : ''}`)
     rounds.forEach((pairs, w) => {
       for (const [home, away] of pairs) {
         if (home === BYE || away === BYE) { byes.push({ week: w + 1, teamId: home === BYE ? away : home }); continue }
@@ -195,7 +209,9 @@ export function generateBlock(bands: Band[], stats: Map<string, TeamStats>, play
   const ha = homeAwayCounts([...fixtures, ...unscheduled.map(u => ({ ...u, date: '', time: '', venue: '', pitch: '' }))])
   const counters = countConstraints(fixtures, ha.home, ha.away, recountRepeats([...fixtures, ...unscheduled], played), unscheduled.length)
   if (counters.repeats !== repeats) log.push(`Note: matching counted ${repeats} repeats, recount found ${counters.repeats}`)
-  return { fixtures, unscheduled, counters, log, slotsPerWeek: slots.length, neededPerWeek: weekly.reduce((m, p) => Math.max(m, p.length), 0), byes }
+  return { fixtures, unscheduled, counters, log, slotsPerWeek: slots.length, neededPerWeek: weekly.reduce((m, p) => Math.max(m, p.length), 0), byes,
+    // the slots this block was built for: the grid draws from these, so editing the setup afterwards can't misplace fixtures
+    setup: { ...setup, venues: setup.venues.map(v => ({ ...v, pitches: [...v.pitches] })), times: [...setup.times] } }
 }
 
 /** Independent checks over the produced fixtures (also run by scripts/validate.ts). */
@@ -237,7 +253,8 @@ export const isSaturday = (iso: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(i
 
 /** Kick-off times as the user types them ("09:00, 10:00"); sorted; errors name the bad entry. */
 export function parseTimes(text: string): { times: string[]; error: string | null } {
-  const parts = text.split(/[,\s]+/).map(t => t.trim()).filter(Boolean)
+  // 9:00 and 09.00 are how people type times; pad and normalise them before checking
+  const parts = text.split(/[,\s]+/).map(t => t.trim()).filter(Boolean).map(t => t.replace(/^(\d)([:.]\d\d)$/, '0$1$2').replace('.', ':'))
   if (parts.length === 0) return { times: [], error: 'Add at least one kick-off time, like 09:00' }
   for (const t of parts) if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) return { times: [], error: `"${t}" isn't a time like 09:00` }
   const dup = parts.find((t, i) => parts.indexOf(t) !== i)

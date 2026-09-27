@@ -195,10 +195,17 @@
         "observe: demo-kit qa.py passed and every contact sheet reviewed"
       ],
       "rollback": "n/a",
-      "status": "doing",
+      "status": "done",
       "notes": "recorded in ../regrade-demo; final.mp4 is delivered outside the repo",
-      "base": "7e1721d",
-      "started_after": 38
+      "base": "0016b05",
+      "started_after": 63,
+      "evidence": [
+        "E0064",
+        "E0065",
+        "E0066",
+        "E0067",
+        "E0068"
+      ]
     },
     {
       "id": "T06",
