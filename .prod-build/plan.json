@@ -26,8 +26,7 @@
         "T03",
         "T04",
         "T05",
-        "T06",
-        "T07"
+        "T06"
       ]
     }
   ],
@@ -164,18 +163,8 @@
         "observe: demo flow J1 completed 3 times on the live URL with no console errors"
       ],
       "rollback": "n/a",
-      "status": "done",
-      "notes": "",
-      "base": "d1aff98",
-      "started_after": 29,
-      "evidence": [
-        "E0032",
-        "E0034",
-        "E0035",
-        "E0036",
-        "E0037",
-        "E0038"
-      ]
+      "status": "todo",
+      "notes": ""
     },
     {
       "id": "T05",
@@ -194,10 +183,8 @@
         "observe: demo-kit qa.py passed and every contact sheet reviewed"
       ],
       "rollback": "n/a",
-      "status": "doing",
-      "notes": "recorded in ../regrade-demo; final.mp4 is delivered outside the repo",
-      "base": "7e1721d",
-      "started_after": 38
+      "status": "todo",
+      "notes": "recorded in ../regrade-demo; final.mp4 is delivered outside the repo"
     },
     {
       "id": "T06",
