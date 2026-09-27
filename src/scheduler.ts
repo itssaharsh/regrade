@@ -22,6 +22,17 @@ export function circleRounds(ids: string[]): Pair[][] {
   return rounds
 }
 
+/** Deterministic Fisher-Yates shuffle seeded from the ids themselves (same band in, same order out). */
+export function seededShuffle(ids: string[]): string[] {
+  let h = 2166136261
+  for (const id of ids) for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619) }
+  let a = h >>> 0
+  const rand = (): number => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
+  const out = [...ids]
+  for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [out[i], out[j]] = [out[j], out[i]] }
+  return out
+}
+
 /**
  * Choose the block's pairings week by week as a perfect matching that (1) never repeats a pairing already played this season
  * or earlier in the block, and (2) keeps every team's block home/away gap within one, by pairing a team that is "owed" a home game
@@ -29,15 +40,17 @@ export function circleRounds(ids: string[]): Pair[][] {
  * fails for a week, the balance constraint is relaxed; if that fails too, played pairings are allowed and counted as repeats.
  */
 export function chooseRounds(ids: string[], played: Set<string>, weeks: number): { rounds: Pair[][]; repeats: number; relaxed: number } {
-  const teams = [...ids].sort()
+  const teams = seededShuffle([...ids].sort())
   if (teams.length % 2 === 1) teams.push(BYE)
+  // partner order comes from a seeded shuffle, not the alphabet, so same-club teams (adjacent by name) are not paired first
+  const rank = new Map(teams.map((t, i) => [t, i]))
   const rounds: Pair[][] = []
   const used = new Set<string>()
   const balance = new Map<string, number>(teams.map(t => [t, 0]))
   let repeats = 0, relaxed = 0
   for (let w = 0; w < weeks; w++) {
-    const tryMatch = (strictBalance: boolean, allowPlayed: boolean): Pair[] | null => {
-      const order = [...teams].sort((a, b) => Math.abs(balance.get(b)!) - Math.abs(balance.get(a)!) || a.localeCompare(b))
+    const tryMatch = (strictBalance: boolean, allowPlayed: boolean, allowUsed = false): Pair[] | null => {
+      const order = [...teams].sort((a, b) => Math.abs(balance.get(b)!) - Math.abs(balance.get(a)!) || rank.get(a)! - rank.get(b)!)
       const res: Pair[] = []
       const taken = new Set<string>()
       const rec = (): boolean => {
@@ -47,7 +60,7 @@ export function chooseRounds(ids: string[], played: Set<string>, weeks: number):
         for (const b of order) {
           if (taken.has(b)) continue
           const k = pairKey(a, b)
-          if (used.has(k)) continue
+          if (!allowUsed && used.has(k)) continue
           if (!allowPlayed && a !== BYE && b !== BYE && played.has(k)) continue
           if (strictBalance && a !== BYE && b !== BYE && balance.get(a)! === balance.get(b)! && balance.get(a) !== 0) continue
           taken.add(b); res.push([a, b])
@@ -59,20 +72,23 @@ export function chooseRounds(ids: string[], played: Set<string>, weeks: number):
       }
       return rec() ? res : null
     }
+    // tiers: strict → balance relaxed → season repeats allowed → block repeats allowed (small bands); each relaxation is counted
     let pairs = tryMatch(true, false)
     if (!pairs) { pairs = tryMatch(false, false); if (pairs) relaxed++ }
     if (!pairs) { pairs = tryMatch(false, true); if (pairs) relaxed++ }
+    if (!pairs) { pairs = tryMatch(false, true, true); if (pairs) relaxed++ }
     if (!pairs) break
     // orient: the team owed a home game plays at home; ties go to the alphabetically earlier team so runs stay deterministic
     const oriented: Pair[] = pairs.map(([a, b]) => {
       if (a === BYE || b === BYE) return [a, b]
       const ba = balance.get(a)!, bb = balance.get(b)!
-      return ba < bb || (ba === bb && a < b) ? [a, b] : [b, a]
+      return ba < bb || (ba === bb && rank.get(a)! < rank.get(b)!) ? [a, b] : [b, a]
     })
     for (const [h, a] of oriented) {
-      if (h === BYE || a === BYE) continue
       const k = pairKey(h, a)
-      if (played.has(k)) repeats++
+      // a bye is a pairing with BYE: mark it used so byes rotate instead of landing on the same team every week
+      if (h === BYE || a === BYE) { used.add(k); continue }
+      if (played.has(k) || used.has(k)) repeats++
       used.add(k)
       balance.set(h, balance.get(h)! + 1); balance.set(a, balance.get(a)! - 1)
     }
