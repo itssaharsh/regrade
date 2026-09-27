@@ -280,10 +280,18 @@
         "observe: Lighthouse desktop and mobile on the live URL after deploy show CLS under 0.1 and accessibility 100"
       ],
       "rollback": "git revert the T08 commit",
-      "status": "doing",
+      "status": "done",
       "notes": "T07 (non-blocking CSS) made CLS worse and was reverted; this removes the cause instead",
       "base": "1e77e21",
-      "started_after": 48
+      "started_after": 48,
+      "evidence": [
+        "E0056",
+        "E0057",
+        "E0058",
+        "E0059",
+        "E0060",
+        "E0061"
+      ]
     }
   ]
 }

@@ -91,7 +91,7 @@ export function chooseRounds(ids: string[], played: Set<string>, weeks: number):
     if (!pairs) { pairs = tryMatch(false, true); if (pairs) relaxed++ }
     if (!pairs) { pairs = tryMatch(false, true, true); if (pairs) relaxed++ }
     if (!pairs) break
-    // orient: the team owed a home game plays at home; ties go to the alphabetically earlier team so runs stay deterministic
+    // orient: the team owed a home game plays at home; ties go to the team earlier in the seeded order so runs stay deterministic
     const oriented: Pair[] = pairs.map(([a, b]) => {
       if (a === BYE || b === BYE) return [a, b]
       const ba = balance.get(a)!, bb = balance.get(b)!

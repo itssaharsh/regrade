@@ -6,13 +6,13 @@ status: active
 scope: global-candidate
 components: regrade-demo/demokit/run.py
 triggers: demokit, virtual time, page.evaluate, hang, scroll, record
-evidence: url:https://itssaharsh.github.io/regrade/, .prod-build/state.md
-verified_at: 2026-09-26@eb0866e
+evidence: ../regrade-demo/demokit/run.py, url:https://itssaharsh.github.io/regrade/, .prod-build/state.md
+verified_at: 2026-09-27@36ed975
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: e3b0c44298fc1c14
+cite_hash: def02526612f9c45
 created: 2026-09-26
 source: unknown
 ---
