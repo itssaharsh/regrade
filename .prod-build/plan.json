@@ -247,8 +247,8 @@
         "observe: Lighthouse on the live URL after deploy shows LCP at or under 2.5 s with accessibility 100"
       ],
       "rollback": "git revert the T07 commit",
-      "status": "doing",
-      "notes": "added after measuring; plan changed openly",
+      "status": "skip",
+      "notes": "added after measuring; plan changed openly\n[2026-09-27 skip] measured worse: CLS 0.71 with non-blocking fonts (E0045); reverted; LCP 2.7 s stays on throttled mobile, desktop measured separately",
       "base": "7e1721d",
       "started_after": 43
     }
