@@ -6,13 +6,13 @@ status: active
 scope: project
 components: src/scheduler.ts
 triggers: same club, derby, partner order, alphabetical, matching
-evidence: src/scheduler.ts#L28-111
-verified_at: 2026-09-27@36ed975
+evidence: src/scheduler.ts#L28-125
+verified_at: 2026-09-27@e8c2ad6
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: 76baf38df146228a
+cite_hash: 684dca282745a6ed
 created: 2026-09-26
 source: unknown
 ---

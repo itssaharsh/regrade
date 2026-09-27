@@ -6,8 +6,8 @@ status: active
 scope: global-candidate
 components: .gitignore
 triggers: lighthouse, WSL, chrome-launcher, temp dir, C:, git status
-evidence: .gitignore#L13, .prod-build/state.md#L26
-verified_at: 2026-09-27@0016b05
+evidence: .gitignore#L13, .prod-build/state.md#L25
+verified_at: 2026-09-27@e8c2ad6
 relates: 
 supersedes: 
 helpful: 0

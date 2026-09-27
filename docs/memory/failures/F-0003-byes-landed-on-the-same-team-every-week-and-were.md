@@ -6,13 +6,13 @@ status: active
 scope: project
 components: src/scheduler.ts, src/main.ts
 triggers: bye, odd band, moveTeam, chooseRounds, fairness
-evidence: src/scheduler.ts#L28-111, tests/byes.test.ts, test:npx vitest run tests/byes.test.ts
-verified_at: 2026-09-27@36ed975
+evidence: src/scheduler.ts#L28-125, tests/byes.test.ts, test:npx vitest run tests/byes.test.ts
+verified_at: 2026-09-27@e8c2ad6
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: 94458d5411e2af7d
+cite_hash: 8d030be8a065471e
 created: 2026-09-26
 source: unknown
 ---

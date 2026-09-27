@@ -6,13 +6,13 @@ status: active
 scope: project
 components: src/scheduler.ts
 triggers: repeat pairings, round robin, home away balance, chooseRounds, validate
-evidence: src/scheduler.ts#L28-111, docs/adr/0002-matching-not-solver-library.md, test:npm run validate
-verified_at: 2026-09-27@36ed975
+evidence: src/scheduler.ts#L28-125, docs/adr/0002-matching-not-solver-library.md, test:npm run validate
+verified_at: 2026-09-27@e8c2ad6
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: a3b42d9ce141afec
+cite_hash: 07e47c559254afe6
 created: 2026-09-26
 source: unknown
 ---

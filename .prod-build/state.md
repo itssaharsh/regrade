@@ -3,14 +3,11 @@
 Deadline: 2026-10-26 17:00 EDT (2026-10-27 02:30 IST). Live: https://itssaharsh.github.io/regrade/ (Pages via Actions, gated on typecheck, test and validate).
 
 ## Done
-- T01 vertical slice; T02 review (53 findings, triaged in reports/review.md); T03 fixes (byes, seeded partner order, search budget, setup validation, keyboard tabs); T04 live demo flow ×3 (E0032).
-- T05 video: ../regrade-demo/demo/build/final.mp4 (2:06, QA passed, contact sheets reviewed, E0064); thumbnail.png, captions.srt, script.md alongside.
-- T07 non-blocking font CSS made CLS worse (E0045) and was reverted: skipped.
-- T08 self-hosted and preloaded fonts: desktop perf 100 / CLS 0, mobile 99 / CLS 0, no third-party requests (E0056).
-- Memory: ADR-0001, ADR-0002, F-0001 to F-0005, L-0001, L-0002; mem check clean.
-
-## Doing
-- T06 submission package: four final reviews, DELIVERY.md, README GIFs (docs/media, cut from final.mp4).
+- T01 vertical slice; T02 review (53 findings, triaged in reports/review.md); T03 fixes; T04 live demo flow ×3.
+- T05 video (E0064), re-recorded after the final reviews from the final live site: ../regrade-demo/demo/build/final.mp4.
+- T07 skipped (non-blocking font CSS made CLS worse, E0045). T08 self-hosted fonts (E0056).
+- T06: four final reviews (E0088, reports/final-reviews.md), fixes in 85cdbaf and e8c2ad6: division-aware banding (docs/adr/0004), block keeps its slots, stale download blocked, input hardening, scheduler search, CSV recount in validate, docs aligned; live: demo ×3 (E0078), Lighthouse desktop 100 / mobile 99, CLS 0 (E0086); DELIVERY.md passes `pb.py report`.
+- Memory: ADR-0001 to ADR-0003, F-0001 to F-0006, L-0001, L-0002; mem check clean.
 
 ## Left for the learner (not the agent's to do)
 - Upload final.mp4 unlisted to YouTube; put the link in README ("Video:") and Devpost.
@@ -18,6 +15,8 @@ Deadline: 2026-10-26 17:00 EDT (2026-10-27 02:30 IST). Live: https://itssaharsh.
 - Write the Devpost name, tagline, description and survey answers themselves from devpost/submission-facts.md (skill-pack rule: the agent only fixes spelling and grammar).
 
 ## What not to repeat
+- Ranking goal difference across divisions as if it were comparable (docs/adr/0004).
+- Painting the static shell before the script fills it (F-0006).
 - Deferring the font stylesheet to fix CLS (F-0005): it moves the swap later and makes CLS worse.
 - Reverting a commit that carries ledger files (L-0002): revert code only.
 - Running Lighthouse from the repo under WSL (L-0001): run it from /tmp.

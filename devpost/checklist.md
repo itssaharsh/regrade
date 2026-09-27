@@ -66,3 +66,6 @@ Build mode: fast (the learner delegated the build; verification kept at every sl
 ## Code Tour and App Map
 
 - [ ] `devpost/app-map.html` written at wrap-up.
+- 2026-09-27: fonts self-hosted and preloaded, and the page shell kept unpainted until the first render, after Lighthouse measured a desktop layout shift of 0.85; now 0 on desktop and mobile.
+- 2026-09-27: banding now counts each division above as 2 goals a game stronger, because results only come from games inside a division; against the sample's hidden strengths this misplaces 16 of 48 teams instead of 24, and validate checks it (docs/adr/0004).
+- 2026-09-27: after four final reviews: the first Saturday is picked from a list, a block keeps the slots it was generated in, Download is blocked while the block is out of date, bands without a division ask for their Full-Time name, moved teams show their old division, and validate recounts every constraint from the exported file (.prod-build/reports/final-reviews.md).
