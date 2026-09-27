@@ -26,7 +26,8 @@
         "T03",
         "T04",
         "T05",
-        "T06"
+        "T06",
+        "T07"
       ]
     }
   ],
@@ -163,8 +164,18 @@
         "observe: demo flow J1 completed 3 times on the live URL with no console errors"
       ],
       "rollback": "n/a",
-      "status": "todo",
-      "notes": ""
+      "status": "done",
+      "notes": "",
+      "base": "d1aff98",
+      "started_after": 29,
+      "evidence": [
+        "E0032",
+        "E0034",
+        "E0035",
+        "E0036",
+        "E0037",
+        "E0038"
+      ]
     },
     {
       "id": "T05",
@@ -183,8 +194,10 @@
         "observe: demo-kit qa.py passed and every contact sheet reviewed"
       ],
       "rollback": "n/a",
-      "status": "todo",
-      "notes": "recorded in ../regrade-demo; final.mp4 is delivered outside the repo"
+      "status": "doing",
+      "notes": "recorded in ../regrade-demo; final.mp4 is delivered outside the repo",
+      "base": "7e1721d",
+      "started_after": 38
     },
     {
       "id": "T06",
@@ -209,8 +222,35 @@
         "python3 .prod-build/pb.py report .prod-build/DELIVERY.md"
       ],
       "rollback": "n/a",
-      "status": "todo",
-      "notes": "the learner writes the Devpost copy; the video link is pasted by the learner after upload"
+      "status": "doing",
+      "notes": "the learner writes the Devpost copy; the video link is pasted by the learner after upload\n[2026-09-27 start] T05 video still rendering; T06 gate work runs in parallel",
+      "base": "7e1721d",
+      "started_after": 38
+    },
+    {
+      "id": "T07",
+      "title": "Non-blocking font CSS",
+      "objective": "First paint no longer waits for the Google Fonts stylesheet; LCP under the 2.5 s budget on Lighthouse's throttled mobile profile (measured 2.7 s before, E0043)",
+      "role": "performance",
+      "size": "S",
+      "deps": [
+        "T04"
+      ],
+      "writes": [
+        "index.html"
+      ],
+      "acceptance": [
+        "LCP <= 2.5 s on the live URL, Lighthouse mobile default"
+      ],
+      "verify": [
+        "npm run build",
+        "observe: Lighthouse on the live URL after deploy shows LCP at or under 2.5 s with accessibility 100"
+      ],
+      "rollback": "git revert the T07 commit",
+      "status": "doing",
+      "notes": "added after measuring; plan changed openly",
+      "base": "7e1721d",
+      "started_after": 43
     }
   ]
 }
