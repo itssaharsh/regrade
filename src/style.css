@@ -40,6 +40,8 @@ button{font:inherit;color:inherit}
 .workspace{display:grid;grid-template-columns:minmax(300px,25%) minmax(0,1fr);gap:24px;padding:20px 24px 96px;max-width:1440px;margin:0 auto}
 .side{display:flex;flex-direction:column;gap:16px;min-width:0}
 .stage{min-width:0}
+/* the panels are filled by script: keep the empty shell unpainted until the first render, so nothing visibly moves (CLS) */
+body:not(.ready) .workspace,body:not(.ready) .foot{visibility:hidden}
 .panel{background:var(--surface-1);border-radius:var(--r-md);padding:14px 16px}
 .panel h2{margin-bottom:8px}
 .muted{color:var(--ink-muted)}

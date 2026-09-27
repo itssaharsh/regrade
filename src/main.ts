@@ -96,6 +96,7 @@ function init(): void {
     state.importErrors = parseResults(state.importDraft).errors
   }
   render()
+  document.body.classList.add('ready')
   if (st === 'dragging') document.querySelector('.team')?.classList.add('dragging')
   // pasted results, moves and setup edits live only in this tab: ask before a reload or the wordmark link throws them away
   // (not under automation, where a leave prompt would stall the QA and demo scripts)
