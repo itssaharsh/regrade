@@ -2,6 +2,8 @@ import type { Band, Block, Counters, Fixture, Setup, Slot, Team, TeamStats, Unsc
 import { pairKey, slotKey } from './model.ts'
 
 export const BYE = '__bye__'
+/** Upper bound on backtracking steps per week and tier; past it the next, looser tier is tried (review #17). */
+export const STEP_BUDGET = 20000
 export type Pair = [string, string]
 
 /** Circle-method round robin. Every team plays once per round; every pair appears exactly once across all rounds. Odd counts get a bye. */
@@ -53,7 +55,17 @@ export function chooseRounds(ids: string[], played: Set<string>, weeks: number):
       const order = [...teams].sort((a, b) => Math.abs(balance.get(b)!) - Math.abs(balance.get(a)!) || rank.get(a)! - rank.get(b)!)
       const res: Pair[] = []
       const taken = new Set<string>()
+      const allowed = (a: string, b: string): boolean => {
+        const k = pairKey(a, b)
+        if (!allowUsed && used.has(k)) return false
+        if (!allowPlayed && a !== BYE && b !== BYE && played.has(k)) return false
+        return true
+      }
+      // precheck: a team with no allowed partner makes this tier impossible; skip it instead of searching
+      if (order.some(a => !order.some(b => b !== a && allowed(a, b)))) return null
+      let steps = 0
       const rec = (): boolean => {
+        if (++steps > STEP_BUDGET) return false
         const a = order.find(t => !taken.has(t))
         if (!a) return true
         taken.add(a)
@@ -70,7 +82,8 @@ export function chooseRounds(ids: string[], played: Set<string>, weeks: number):
         taken.delete(a)
         return false
       }
-      return rec() ? res : null
+      const ok = rec()
+      return ok && steps <= STEP_BUDGET ? res : null
     }
     // tiers: strict → balance relaxed → season repeats allowed → block repeats allowed (small bands); each relaxation is counted
     let pairs = tryMatch(true, false)
@@ -116,7 +129,7 @@ interface Placement { fixture: Omit<Fixture, 'venue' | 'pitch' | 'time'>; bandIn
  * Hard constraints: one fixture per slot, one fixture per team per week. Preferences, scored and logged, never violated silently:
  * a band plays at one venue on a given Saturday (rotating between venues), and a club's teams share a venue.
  */
-export function generateBlock(bands: Band[], stats: Map<string, TeamStats>, played: Set<string>, teams: Team[], setup: Setup): Block {
+export function generateBlock(bands: Band[], stats: Map<string, TeamStats>, played: Set<string>, teams: Team[], setup: Setup, divisions: Map<string, string> = new Map()): Block {
   const log: string[] = []
   const slots = slotsFor(setup)
   const clubOf = new Map(teams.map(t => [t.id, t.club]))
@@ -134,7 +147,7 @@ export function generateBlock(bands: Band[], stats: Map<string, TeamStats>, play
     rounds.forEach((pairs, w) => {
       for (const [home, away] of pairs) {
         if (home === BYE || away === BYE) { byes.push({ week: w + 1, teamId: home === BYE ? away : home }); continue }
-        weekly[w].push({ fixture: { week: w + 1, date: saturday(setup.firstSaturday, w), division: band.name, homeId: home, awayId: away }, bandIndex: bi })
+        weekly[w].push({ fixture: { week: w + 1, date: saturday(setup.firstSaturday, w), band: band.id, division: divisions.get(band.id) ?? band.name, homeId: home, awayId: away }, bandIndex: bi })
       }
     })
   })
@@ -161,7 +174,7 @@ export function generateBlock(bands: Band[], stats: Map<string, TeamStats>, play
         if (!best || score < best.score) best = { slot: s, score }
       }
       if (!best) {
-        unscheduled.push({ week, division: p.fixture.division, homeId: p.fixture.homeId, awayId: p.fixture.awayId, reason: `No free slot in week ${week}: ${placements.length} fixtures, ${slots.length} slots` })
+        unscheduled.push({ week, band: p.fixture.band, division: p.fixture.division, homeId: p.fixture.homeId, awayId: p.fixture.awayId, reason: `No free slot in week ${week}: ${placements.length} fixtures, ${slots.length} slots` })
         continue
       }
       used.add(slotKey(best.slot))
@@ -173,12 +186,15 @@ export function generateBlock(bands: Band[], stats: Map<string, TeamStats>, play
     const perVenue = new Map<string, number>()
     for (const f of fixtures.filter(f => f.week === week)) perVenue.set(f.venue, (perVenue.get(f.venue) ?? 0) + 1)
     const missing = unscheduled.filter(u => u.week === week).length
+    const split = bands.filter(b => new Set(fixtures.filter(f => f.week === week && f.band === b.id).map(f => f.venue)).size > 1).map(b => b.name)
+    if (split.length) log.push(`Week ${week}: ${split.join(', ')} split across venues (not enough pitches at one ground)`)
     log.push(`Week ${week} (${saturday(setup.firstSaturday, w)}): ${placements.length} fixtures into ${slots.length} slots; ${[...perVenue.entries()].map(([v, n]) => `${v} ${n}`).join(', ')}${missing ? `; ${missing} unscheduled` : ''}`)
   })
 
   // home/away balance is a property of the pairings, so count placed and unplaced fixtures alike
   const ha = homeAwayCounts([...fixtures, ...unscheduled.map(u => ({ ...u, date: '', time: '', venue: '', pitch: '' }))])
-  const counters = countConstraints(fixtures, ha.home, ha.away, repeats, unscheduled.length)
+  const counters = countConstraints(fixtures, ha.home, ha.away, recountRepeats([...fixtures, ...unscheduled], played), unscheduled.length)
+  if (counters.repeats !== repeats) log.push(`Note: matching counted ${repeats} repeats, recount found ${counters.repeats}`)
   return { fixtures, unscheduled, counters, log, slotsPerWeek: slots.length, neededPerWeek: weekly.reduce((m, p) => Math.max(m, p.length), 0), byes }
 }
 
@@ -203,4 +219,35 @@ export function homeAwayCounts(fixtures: Fixture[]): { home: Map<string, number>
   const home = new Map<string, number>(), away = new Map<string, number>()
   for (const f of fixtures) { home.set(f.homeId, (home.get(f.homeId) ?? 0) + 1); away.set(f.awayId, (away.get(f.awayId) ?? 0) + 1) }
   return { home, away }
+}
+
+/** Independent recount: pairings already played this season, plus pairings that appear more than once in the block. */
+export function recountRepeats(pairs: { homeId: string; awayId: string }[], played: Set<string>): number {
+  const seen = new Set<string>()
+  let n = 0
+  for (const p of pairs) {
+    const k = pairKey(p.homeId, p.awayId)
+    if (played.has(k) || seen.has(k)) n++
+    seen.add(k)
+  }
+  return n
+}
+
+export const isSaturday = (iso: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(iso) && new Date(iso + 'T00:00:00Z').getUTCDay() === 6
+
+/** Kick-off times as the user types them ("09:00, 10:00"); sorted; errors name the bad entry. */
+export function parseTimes(text: string): { times: string[]; error: string | null } {
+  const parts = text.split(/[,\s]+/).map(t => t.trim()).filter(Boolean)
+  if (parts.length === 0) return { times: [], error: 'Add at least one kick-off time, like 09:00' }
+  for (const t of parts) if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) return { times: [], error: `"${t}" isn't a time like 09:00` }
+  const dup = parts.find((t, i) => parts.indexOf(t) !== i)
+  if (dup) return { times: [], error: `"${dup}" appears twice` }
+  return { times: [...parts].sort(), error: null }
+}
+
+/** How many pitches (one per venue, all kick-offs) or kick-off times (all pitches) close a shortfall. */
+export function shortfallAdvice(needed: number, slots: number, times: number, pitches: number): string {
+  const short = Math.max(0, needed - slots)
+  const p = Math.ceil(short / Math.max(1, times)), k = Math.ceil(short / Math.max(1, pitches))
+  return `Add ${p} pitch${p === 1 ? '' : 'es'}, or ${k} kick-off time${k === 1 ? '' : 's'}.`
 }

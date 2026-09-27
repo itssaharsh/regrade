@@ -13,27 +13,29 @@
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-  <a class="skip" href="#main">Skip to the workspace</a>
+  <a class="skip" href="#stage">Skip to the fixture block</a>
+  <a class="skip" href="#main">Skip to results and bands</a>
   <header class="topbar">
-    <a class="wordmark" href="./" aria-label="Regrade home">
+    <h1 class="wordmark-h"><a class="wordmark" href="./" aria-label="Regrade, reload the sample league">
       <svg viewBox="0 0 48 48" width="26" height="26" aria-hidden="true"><path fill="#EE5A24" d="M24 6 8 38h32z"/><path fill="#151515" d="M6 38h36v4H6z"/><path fill="#151515" fill-rule="evenodd" d="M24 14 14 34h20zM24 22l4 8h-8z"/></svg>
       <span>Regrade</span>
-    </a>
+    </a></h1>
     <p class="descriptor">Re-band by results. Refixture into your slots. Export to Full-Time.</p>
   </header>
-  <main id="main" class="workspace">
-    <aside class="side">
+  <main id="main" class="workspace" tabindex="-1">
+    <aside class="side" aria-label="Results, pitch slots and bands">
       <section id="import" class="panel" aria-labelledby="import-h"></section>
       <section id="slots" class="panel" aria-labelledby="slots-h"></section>
       <section id="bands" class="panel bands" aria-labelledby="bands-h"></section>
     </aside>
-    <section class="stage" aria-label="Fixture block">
+    <section class="stage" id="stage" aria-label="Fixture block" tabindex="-1">
       <div class="stage-head">
         <div id="weeks" class="tabs" role="tablist" aria-label="Weeks"></div>
-        <div id="chips" class="chips" aria-label="Constraint counts"></div>
-        <div class="actions"><button id="generate" class="btn primary" type="button">Generate 4 weeks</button></div>
+        <div id="chips" class="chips" role="group" aria-label="Constraint counts"></div>
+        <div class="actions"><button id="generate" class="btn primary" type="button" aria-keyshortcuts="Alt+Shift+G" title="Generate (Alt+Shift+G)">Generate 4 weeks</button></div>
+        <p id="stale" class="stale" hidden></p>
       </div>
-      <div id="grid" class="grid-wrap" role="region" aria-label="Fixture grid" tabindex="0"></div>
+      <div id="grid" class="grid-wrap" role="tabpanel" aria-labelledby="tab-w1"></div>
       <div id="byes"></div>
       <div id="unscheduled"></div>
       <section id="export" class="panel export" aria-labelledby="export-h"></section>
@@ -41,7 +43,7 @@
     </section>
   </main>
   <footer class="foot">
-    <p>Mini-soccer central venues, England. Export layout from the FA's Full-Time Fixtures guide v5.1 (2015): confirm it against your league's uploader before use.</p>
+    <p>Mini-soccer central venues, England. The export follows the Full-Time Fixtures guide v5.1 (2015): confirm the columns against your league's uploader, and make sure each division name exists in Full-Time. Shortcuts: Alt+Shift+G generates, Alt+Shift+R reloads the sample.</p>
   </footer>
   <div id="status" role="status" aria-live="polite" class="sr-only"></div>
   <script type="module" src="/src/main.ts"></script>

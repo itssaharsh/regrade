@@ -1,6 +1,6 @@
 # Build plan — Regrade (hackathon-build, adapted to a 6–12 h solo build for Devpost "Build With AI: Basics")
 
-Eligibility first: the project starts in this empty folder (created 2026-09-26, inside the submission period), is planned and built through the Devpost Learn skill pack (1-start → 6-ship, the learner answering its interviews), and commits devpost/scope.md, prd.md, spec.md, checklist.md and app-map.html. This plan and UI-SPEC.md are inputs to those interviews, not substitutes.
+Eligibility first: the project starts in this empty folder (created 2026-09-26, inside the submission period), is planned and built through the Devpost Learn skill pack (1-start → 6-ship; the learner delegated the interviews and the build to the agent, so the planning documents are agent-drafted and stay status: draft until the learner reads them and approves), and commits devpost/scope.md, prd.md, spec.md, checklist.md and app-map.html. This plan and UI-SPEC.md are inputs to those interviews, not substitutes.
 
 ## R13 Demo script before code
 The shot list is UI-SPEC.md §2. Build only what appears in it: results in, band board, Generate, grid, chips, unscheduled list, export preview, download, verify script. Nothing else.
@@ -13,7 +13,7 @@ The shot list is UI-SPEC.md §2. Build only what appears in it: results in, band
 - `src/scheduler.ts` per band: circle-method round robin for the next 4 rounds, skipping pairings already played this season; then slot assignment (venue × pitch × time per Saturday) by backtracking with hard constraints (one fixture per slot; one fixture per team per week; no repeat pairing in the block) and soft ones (home/away alternation per team). Returns fixtures, unscheduled, and the counters.
 - `src/export.ts` fixtureupload.csv writer: Date DD/MM/YYYY, Time HH:MM, Division, Home Team, Away Team, Venue, Pitch, Home Score, Away Score (blank).
 - `src/seed.ts` deterministic fictional league (seeded PRNG): Oakford & District Youth League, U9, 48 teams, 3 bands, 2 venues × 4 pitches × 3 slots (09:00, 10:00, 11:00), 6 weeks of results from latent strengths.
-- `src/ui/` band board, grid, chips, import panel, export panel; `?state=` forces states; Alt+Shift+R resets.
+- `src/main.ts` band board, grid, chips, import panel, slots panel, export panel; `?state=` forces states; Alt+Shift+R resets; Alt+Shift+G generates.
 - `scripts/validate.ts` (R18): seed → band → schedule 4 weeks → assert 0 clashes, 0 repeats, |home−away| ≤ 1 per team, every team once per week, CSV has 9 columns and DD/MM/YYYY dates → print PASS/FAIL. Runs offline in under a second.
 - `tests/scheduler.test.ts` (R Step 7): the branching functions a judge would probe: `proposeBands`, `roundRobin`, `assignSlots` (capacity shortfall returns the unscheduled list, never a silent partial).
 

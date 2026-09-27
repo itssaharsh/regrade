@@ -1,7 +1,7 @@
 // Deterministic proof: seed -> band -> schedule 4 weeks -> assert -> PASS/FAIL. Runs offline in well under a second.
 import { parseResults, computeStats, playedPairs } from '../src/results.ts'
 import { proposeBands } from '../src/banding.ts'
-import { generateBlock, countConstraints, homeAwayCounts } from '../src/scheduler.ts'
+import { generateBlock, countConstraints, homeAwayCounts, recountRepeats } from '../src/scheduler.ts'
 import { toUploaderCsv, UPLOADER_COLUMNS } from '../src/export.ts'
 import { sampleResultsCsv, sampleSetup } from '../src/seed.ts'
 
@@ -22,7 +22,7 @@ const independent = countConstraints(block.fixtures, ha.home, ha.away, block.cou
 check('96 fixtures placed over 4 weeks', block.fixtures.length === 96, `${block.fixtures.length}`)
 check('0 pitch clashes (independent recount)', independent.clashes === 0, `${independent.clashes}`)
 check('every team plays once per week', independent.teamWeekViolations === 0)
-check('0 repeat pairings against this season', block.counters.repeats === 0, `${block.counters.repeats}`)
+check('0 repeat pairings (independent recount from the fixtures)', recountRepeats(block.fixtures, played) === 0 && block.counters.repeats === 0, `${recountRepeats(block.fixtures, played)}`)
 check('home/away within 1 for every team', independent.maxHomeAwayGap <= 1, `max gap ${independent.maxHomeAwayGap}`)
 check('0 unscheduled with 24 slots', block.unscheduled.length === 0)
 

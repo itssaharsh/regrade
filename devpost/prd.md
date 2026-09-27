@@ -12,10 +12,10 @@ One line: Regrade re-bands youth-league teams by results and refixtures them int
 2. They paste their own block's results, or keep the sample to try it. Bad rows are named; good rows load.
 3. The band board shows every team ordered by goals per game, split into bands, each band with a spread number and a count of teams that would change division.
 4. They drag a team to another band, or use the arrow buttons. The spread numbers update and the block is marked stale.
-5. They set the Saturday slots: venues, pitches per venue, the three kick-off times, the first Saturday.
+5. They set the Saturday slots: venue names, pitches per venue, the kick-off times and the first Saturday (which must be a Saturday).
 6. They click Generate 4 weeks. The grid fills week by week; the chips show clashes, repeat pairings and the home/away gap.
 7. If fixtures do not fit, a red list names them and what to change.
-8. They download fixtureupload.csv, in the Full-Time uploader's nine columns, and upload it to Full-Time. Success: the file uploads with no manual edits.
+8. They download fixtureupload.csv, in the Full-Time uploader's nine columns with each band under its division name from the results file, and upload it to Full-Time. Success: the file uploads with no manual edits.
 
 ## Screens and Layout
 One workspace. Left column: Results panel (collapsed to a summary once loaded), Bands board, Pitch slots panel. Main area: week tabs, constraint chips and the Generate button in a row; the pitch-plan grid (venues as column groups, pitches as columns, times as rows); the unscheduled list when needed; the Export panel with a preview of the CSV; a collapsible solver log. Under 1024 px it stacks into one column; under 640 px the Generate button is fixed at the bottom. (`scope.md > The Core Loop`)
@@ -37,7 +37,8 @@ White fixtures-sheet canvas, marker-black ink, one training-cone orange for the 
 
 ### Generating the block
 - Pairings per band for four Saturdays that never repeat a pairing already played this season or earlier in the block, and keep every team within one home game of its away games; if the strict search fails, it relaxes and says so in the log.
-- Places every fixture into a venue, pitch and time; one fixture per slot, one per team per week; a band plays at one venue on a given Saturday, rotating; a club's teams share a venue when possible.
+- Places every fixture into a venue, pitch and time; one fixture per slot, at most one per team per week; each band's fixtures grouped at as few venues as possible, with any split logged; a club's teams share a venue when possible.
+- Odd bands rest one team each Saturday, a different team every week, and the byes are listed under the grid for that week.
 - Counters after every generation: clashes, repeat pairings, home/away gap, moved teams.
 - Fixtures that do not fit are listed by name with the shortfall and a suggestion, never dropped silently.
 

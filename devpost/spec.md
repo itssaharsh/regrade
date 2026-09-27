@@ -15,7 +15,8 @@ The secretary pastes results → `results.ts` parses rows, names bad ones, and c
 - TypeScript 5 with Vite 6 for the dev server and build (https://vite.dev); vanilla DOM, no framework: one page, one state object, render functions. Tradeoff accepted: a little more hand-written DOM code in exchange for zero runtime dependencies.
 - Vitest 3 for tests (https://vitest.dev); Node's built-in type stripping runs the validate script without extra tooling.
 - Google Fonts (Barlow Condensed, Public Sans, Chivo Mono) loaded from fonts.googleapis.com; the page still works if they fail to load.
-- Unverified until first use: nothing; all pieces were exercised by `npm test` and `npm run validate`.
+- Verified by `npm test`, `npm run validate` and the QA script (qa/shots.py): the parser, banding, scheduler, export and the workspace states on a synthetic league.
+- Unverified: the 2015 uploader column layout against a live Full-Time uploader; that the exported division names exist in a real league's Full-Time; behaviour on a real league's season.
 
 ## Where It Runs and How Someone Tries It
 Runs in any modern browser as static files. Requirements to develop: Node.js 22 and Git. Commands: `npm install`, `npm run dev` (open http://localhost:5173), `npm test`, `npm run validate`, `npm run build`. For the demo recording open the dev or preview server, click Generate 4 weeks, then Download. Deployment (optional, chosen): GitHub Pages from the `main` branch via a workflow that builds with `BASE_PATH=/regrade/`.

@@ -42,20 +42,28 @@ export function bandSpread(band: Band, stats: Map<string, TeamStats>): number {
   return Math.max(...v) - Math.min(...v)
 }
 
-/** How many teams the proposal moves out of the division the results file recorded for them. */
-export function movedTeams(bands: Band[], recordedDivision: Map<string, string>): number {
-  const byBand = new Map<string, Map<string, number>>()
+/**
+ * Export name for each band: the recorded division most of its teams came from, each division used once (review #22).
+ * Bands with no matching division (more bands than divisions, or no Division column) keep their band name.
+ */
+export function divisionNames(bands: Band[], recordedDivision: Map<string, string>): Map<string, string> {
+  const pairs: { band: string; division: string; count: number }[] = []
   for (const b of bands) {
     const counts = new Map<string, number>()
-    for (const id of b.teamIds) { const d = recordedDivision.get(id) ?? ''; counts.set(d, (counts.get(d) ?? 0) + 1) }
-    byBand.set(b.id, counts)
+    for (const id of b.teamIds) { const d = recordedDivision.get(id) ?? ''; if (d) counts.set(d, (counts.get(d) ?? 0) + 1) }
+    for (const [division, count] of counts) pairs.push({ band: b.id, division, count })
   }
-  // a band "corresponds" to the recorded division most of its teams came from
+  pairs.sort((x, y) => y.count - x.count || x.band.localeCompare(y.band) || x.division.localeCompare(y.division))
+  const out = new Map<string, string>(), usedDiv = new Set<string>()
+  for (const p of pairs) if (!out.has(p.band) && !usedDiv.has(p.division)) { out.set(p.band, p.division); usedDiv.add(p.division) }
+  for (const b of bands) if (!out.has(b.id)) out.set(b.id, b.name)
+  return out
+}
+
+/** How many teams the proposal moves out of the division the results file recorded for them. */
+export function movedTeams(bands: Band[], recordedDivision: Map<string, string>): number {
+  const names = divisionNames(bands, recordedDivision)
   let moved = 0
-  for (const b of bands) {
-    const counts = byBand.get(b.id)!
-    const majority = [...counts.entries()].sort((x, y) => y[1] - x[1])[0]?.[0] ?? ''
-    for (const id of b.teamIds) if ((recordedDivision.get(id) ?? '') !== majority) moved++
-  }
+  for (const b of bands) for (const id of b.teamIds) { const d = recordedDivision.get(id); if (d && d !== names.get(b.id)) moved++ }
   return moved
 }

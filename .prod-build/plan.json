@@ -91,10 +91,17 @@
         "observe: review report saved with confirmed and refuted findings"
       ],
       "rollback": "n/a",
-      "status": "doing",
+      "status": "done",
       "notes": "runs as a workflow; reviewers change no code",
       "base": "eb0866e",
-      "started_after": 9
+      "started_after": 9,
+      "evidence": [
+        "E0016",
+        "E0017",
+        "E0018",
+        "E0019",
+        "E0020"
+      ]
     },
     {
       "id": "T03",
@@ -126,8 +133,17 @@
         "python3 qa/shots.py"
       ],
       "rollback": "git revert the fix commits",
-      "status": "todo",
-      "notes": "qa/shots.py needs a preview server on 4173; run it through pb.py run with the server started in the background"
+      "status": "done",
+      "notes": "qa/shots.py needs a preview server on 4173; run it through pb.py run with the server started in the background",
+      "base": "efb86a1",
+      "started_after": 20,
+      "evidence": [
+        "E0025",
+        "E0026",
+        "E0027",
+        "E0028",
+        "E0029"
+      ]
     },
     {
       "id": "T04",

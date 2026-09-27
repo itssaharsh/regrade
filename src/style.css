@@ -24,6 +24,7 @@ button{font:inherit;color:inherit}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .skip{position:absolute;left:8px;top:-40px;background:var(--ink);color:var(--canvas);padding:8px 12px;border-radius:var(--r-sm);z-index:10}
 .skip:focus{top:8px}
+.wordmark-h{margin:0;font-size:inherit;line-height:1}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .num{font-variant-numeric:tabular-nums}
 
@@ -101,17 +102,17 @@ input[type="date"]{font:inherit;height:32px;border:1px solid var(--line-input);b
 .actions{display:flex;gap:8px}
 
 /* grid */
-.grid-wrap{overflow:auto}
-.gtable{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-bottom:12px}
+.grid-wrap{outline-offset:4px}
+.gtable{border:1px solid var(--line);border-radius:var(--r-md);overflow-x:auto;margin-bottom:12px}
 table.grid{border-collapse:collapse;width:100%;min-width:600px;table-layout:fixed}
-table.grid th.date-h,table.grid td.time{width:92px}
+table.grid th.date-h,table.grid th.time{text-align:left;font-weight:700;width:92px}
 table.grid th,table.grid td{border:1px solid var(--line);vertical-align:top}
 table.grid thead th{background:var(--surface-1);font-weight:600;font-size:13px;color:var(--ink-muted);padding:6px 8px;text-align:left}
-table.grid thead th.venue-h{font-family:var(--ff-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);padding:8px 10px}
+table.grid caption.venue-h{text-align:left;background:var(--surface-1);border-bottom:1px solid var(--line);font-family:var(--ff-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);padding:8px 10px}
 table.grid thead th.date-h{white-space:nowrap}
 table.grid thead th.pitch-h{padding:4px 8px}
 .mini{display:block;width:100%;height:22px}
-table.grid td.time{font-family:var(--ff-display);font-size:18px;color:var(--ink-muted);padding:8px;background:var(--surface-1)}
+table.grid th.time{text-align:left;font-weight:700;font-family:var(--ff-display);font-size:18px;color:var(--ink-muted);padding:8px;background:var(--surface-1)}
 table.grid td.cell{height:64px;padding:6px 8px;position:relative;font-size:13.5px}
 .fx{display:flex;flex-direction:column;gap:2px;opacity:1}
 .fx .pair{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -159,3 +160,36 @@ table.grid td.cell{height:64px;padding:6px 8px;position:relative;font-size:13.5p
 .swatch{flex:none}
 .fx .pair{min-width:0}
 .fx .pair span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* review fixes */
+.team{height:auto;min-height:36px;padding:4px}
+.team .name{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;overflow-wrap:anywhere}
+.team.dragging{opacity:1;background:var(--canvas);box-shadow:var(--shadow-raised)}
+.exports{flex-basis:100%;font-size:12px;color:var(--ink-muted)}
+.stale{flex-basis:100%;margin:0}
+.log summary{padding:6px 0;min-height:32px}
+.grid-first{margin:0 0 12px;padding:10px 12px;background:var(--accent-container);border-radius:var(--r-md);color:var(--ink)}
+.grid-first strong{display:inline;font:inherit;font-weight:600;text-transform:none;letter-spacing:0;margin:0}
+table.grid.empty td.cell{background:var(--surface-sunken)}
+.venue{flex-wrap:wrap}
+.vname{flex:1 1 140px;min-width:0;height:32px;font:inherit;padding:0 8px;border:1px solid var(--line-input);border-radius:var(--r-sm);background:var(--canvas);color:var(--ink)}
+.icon-x{width:28px;height:28px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink-muted);cursor:pointer;font-size:18px;line-height:1}
+@media (hover:hover) and (pointer:fine){.icon-x:hover{background:var(--surface-2);color:var(--ink)}}
+.field{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 8px;padding:8px 0;border-top:1px solid var(--line)}
+.field input{font:inherit;height:32px;border:1px solid var(--line-input);border-radius:var(--r-sm);padding:0 8px;background:var(--canvas);color:var(--ink);min-width:0;flex:0 1 180px}
+.field .caption{flex-basis:100%;margin:0}
+[aria-invalid="true"]{border-color:var(--danger)!important}
+.tab[aria-disabled="true"]{opacity:.4;cursor:default}
+@media (forced-colors:active){
+  .tab[aria-selected="true"]{text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px}
+  .chip{border:1px solid CanvasText}
+  .swatch{forced-color-adjust:none}
+}
+@media (max-width:639px){
+  .foot{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+}
+/* venue rows: name + remove on line 1, pitch stepper on line 2, at every width */
+#slots .venue{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 8px}
+#slots .venue .vname{grid-column:1;width:100%;flex:none}
+#slots .venue .icon-x{grid-column:2;grid-row:1}
+#slots .venue .stepper{grid-column:1 / -1;grid-row:2}

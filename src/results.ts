@@ -38,7 +38,8 @@ export function parseResults(text: string): Parsed {
   const errors: ParseError[] = []
   const teamMap = new Map<string, Team>()
   if (lines.length === 0) return { results, errors: [{ row: 0, message: 'No rows found' }], teams: [] }
-  const header = splitCsvLine(lines[0]).map(h => h.toLowerCase())
+  const split = lines[0].includes('\t') ? (l: string): string[] => l.split('\t').map(c => c.trim()) : splitCsvLine
+  const header = split(lines[0]).map(h => h.toLowerCase())
   const col = (names: string[]): number => names.map(n => header.indexOf(n)).find(i => i >= 0) ?? -1
   const iDate = col(['date']), iDiv = col(['division', 'div']), iHome = col(['home team', 'home']), iAway = col(['away team', 'away'])
   const iHS = col(['home score', 'hs', 'home goals']), iAS = col(['away score', 'as', 'away goals'])
@@ -46,12 +47,16 @@ export function parseResults(text: string): Parsed {
     return { results, errors: [{ row: 1, message: 'Header must name Home Team, Away Team, Home Score and Away Score' }], teams: [] }
   }
   for (let r = 1; r < lines.length; r++) {
-    const cells = splitCsvLine(lines[r])
+    const cells = split(lines[r])
     const home = cells[iHome] ?? '', away = cells[iAway] ?? ''
     if (!home || !away) { errors.push({ row: r + 1, message: `Row ${r + 1}: team name missing` }); continue }
+    const formula = [home, away].find(n => /^[=+\-@\t\r]/.test(n))
+    if (formula) { errors.push({ row: r + 1, message: `Row ${r + 1}: "${formula}" starts with =, +, - or @ and would run as a spreadsheet formula` }); continue }
+    if (slug(home) === slug(away)) { errors.push({ row: r + 1, message: `Row ${r + 1}: a team can't play itself (${home})` }); continue }
     const hs = cells[iHS] ?? '', as = cells[iAS] ?? ''
-    if (hs === '' || as === '' || Number.isNaN(Number(hs)) || Number.isNaN(Number(as))) {
-      errors.push({ row: r + 1, message: `Row ${r + 1}: score missing (${home} vs ${away})` }); continue
+    if (hs === '' || as === '') { errors.push({ row: r + 1, message: `Row ${r + 1}: score missing (${home} vs ${away})` }); continue }
+    if (!/^\d{1,2}$/.test(hs) || !/^\d{1,2}$/.test(as)) {
+      errors.push({ row: r + 1, message: `Row ${r + 1}: scores must be whole numbers from 0 to 99 (${home} ${hs}–${as} ${away})` }); continue
     }
     const date = normaliseDate(iDate >= 0 ? cells[iDate] ?? '' : '')
     results.push({ date, division: iDiv >= 0 ? cells[iDiv] ?? '' : '', home, away, homeScore: Number(hs), awayScore: Number(as) })

@@ -14,7 +14,7 @@ signature: { interaction: "Dragging a team across a band boundary re-flows both 
 wow: "Generate 4 weeks → cells fill in slot order over ~1 s → the three counters land on 0 → the export preview appears already in the FA's nine columns"
 demo: { seed: ./src/seed.ts (fictional league, deterministic), flag: "?demo=1 (default when no results pasted)", state_param: "?state=", reset: "alt+shift+r", replay: "n/a (the solver is deterministic and instant)", guest: true }
 live_vs_simulated: [ "results parsing: live", "banding: live", "scheduler: live", "fixtureupload.csv export: live (layout from the FA's 2015 guide; confirm current)", "results data: synthetic, labelled 'fictional league'" ]
-deviations: [ "no replay shortcut: there is no long-running or networked step to replay" ]
+deviations: [ "no replay shortcut: there is no long-running or networked step to replay", "no ?demo=1 flag: the sample league loads by default and Alt+Shift+R reloads it", "band moves use arrow buttons, not Alt+Arrow: buttons are discoverable and touch-friendly", "no band tabs under 640px: one list with wrapping names reads better on a phone", "no loading state: the solver finishes in well under 100 ms on 48 teams", "Regraded count moved from the chips row into the bands intro (review #37)", "Pitch slots panel sits above the band board: short setup before the 48-row list", "first-run shows the empty pitch plan with a one-line invitation, not three hairlines (review #38)" ]
 ---
 
 ## 0. Brief + context profile
@@ -99,17 +99,17 @@ Blueprint at 1440: top bar 52 · left column 4 cols (Results panel, then Band bo
 ### C-01 BandRow (custom, native button + drag)
 Purpose: move a team between bands with the mouse or the keyboard.
 Tier / register: secondary · productive
-Placement: S1 band board, one per team, grouped under band headers; mobile: same list, band tabs above.
+Placement: S1 band board, one per team, grouped under band headers; mobile: same list, names wrap.
 Size: h36, px12, gap 8; drag handle 16px glyph.
 Tokens: bg surface-1, hover surface-2, ink; band swatch --data-a/b/c 8px square with the letter.
 States: idle | hover (surface-2) | focus-visible (2px ink outline) | dragging (raised shadow, 98% opacity) | dropped (settles, spread numbers tick)
-Keyboard: Alt+↑/↓ moves the team one band; the status region says "Oakford Colts moved to Band B".
+Keyboard: the ↑/↓ buttons move the team one band; focus stays on the moved team; the status region says "Oakford Colts Reds moved to Band B".
 A11y: role=listitem within role=list per band; the move buttons have names.
 Acceptance: ?state=dragging renders at 320 and 1440.
 
 ### C-02 GenerateButton (native button)
 Purpose: run the scheduler for the next 4 weeks.
-States: idle "Generate 4 weeks" | blocked (aria-disabled, reason text under it) | loading "Placing… n/96" (width locked; status region announces steps) | done.
+States: idle "Generate 4 weeks" | stale "Regenerate 4 weeks" with the changed line beside it | done (status region announces fixtures, clashes, repeats, unscheduled, byes).
 Keyboard: Enter/Space; Alt+Shift+G anywhere.
 
 ### C-03 ConstraintChip
@@ -138,7 +138,7 @@ Scheduler: idle -GENERATE-> running(n/96) -DONE-> generated(clashes, repeats, ba
 - Buttons: "Generate 4 weeks" · "Download fixtureupload.csv" · "Load sample results" · "Use your own results" · "Regenerate"
 - First-run grid: "Generate to fill 4 weeks into 24 slots"
 - Blocked: "Load results first"
-- Loading: "Placing 96 fixtures… 61/96"
+- Byes: "Bye this Saturday: <team> (Band A). Bands with an odd number of teams rest one team each week, a different team every week."
 - Chips: "Clashes 0" · "Repeat pairings 0" · "Home/away within 1"
 - Partial: "6 fixtures don't fit: 24 needed, 18 slots. Add a slot or a week." then the six pairings
 - Row error: "Row 14: score missing (Oakford Colts vs Ashby Lions)"
