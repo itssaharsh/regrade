@@ -9,3 +9,4 @@ node_modules/
 dist/
 qa/*
 !qa/shots.py
+!qa/live-demo.py
