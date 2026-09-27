@@ -30,7 +30,7 @@ flowchart LR
 ## Failure boundaries
 - Parser: header or row errors are shown next to the textarea; the previous league stays loaded.
 - Scheduler: three-step relaxation (strict balance → balance relaxed → played pairs allowed) with the relaxation logged; capacity shortfall produces the unscheduled list, never a partial grid presented as complete.
-- Fonts: Google Fonts optional; system fallback.
+- Fonts: self-hosted and preloaded (they were a 0.85 layout shift when loaded from Google Fonts); system fallback if they fail.
 - Hosting: single route; the app works offline once loaded.
 
 ## State and secrets

@@ -7,7 +7,7 @@ registers: { workspace: productive, generate_payoff: celebratory, failure_list: 
 direction: "derived: canvas white fixtures sheet #FFFFFF · ink marker black #151515 · accent training-cone orange #EE5A24 (fill-only, ink label) · display Barlow Condensed 700 (jersey numerals; candidates: Barlow Condensed, Big Shoulders Display, Saira Extra Condensed) · body Public Sans · mono Chivo Mono (CSV preview only)"
 personality: precise
 dials: { variance: 3, motion: 3, density: 7 }
-stack: { page: "Vite + TypeScript, vanilla DOM (one page, no framework)", tests: "vitest for the scheduler", fonts: "Google Fonts", deps: "none at runtime" }
+stack: { page: "Vite + TypeScript, vanilla DOM (one page, no framework)", tests: "vitest for the scheduler", fonts: "self-hosted woff2 (OFL), preloaded", deps: "none at runtime" }
 archetype: dev-tool-like single workspace (B13 g proportions, without the terminal)
 viewports: [320x640, 390x844, 1024x768, 1440x900]
 signature: { interaction: "Dragging a team across a band boundary re-flows both bands and their spread numbers, then Generate refills the grid in slot order", visual: "the pitch-plan grid: each pitch column drawn as a mini pitch (centre line, two goal boxes) with fixtures placed in its slots" }

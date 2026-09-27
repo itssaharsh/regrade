@@ -14,7 +14,7 @@ The secretary pastes results → `results.ts` parses rows, names bad ones, and c
 ## Stack
 - TypeScript 5 with Vite 6 for the dev server and build (https://vite.dev); vanilla DOM, no framework: one page, one state object, render functions. Tradeoff accepted: a little more hand-written DOM code in exchange for zero runtime dependencies.
 - Vitest 3 for tests (https://vitest.dev); Node's built-in type stripping runs the validate script without extra tooling.
-- Google Fonts (Barlow Condensed, Public Sans, Chivo Mono) loaded from fonts.googleapis.com; the page still works if they fail to load.
+- Fonts self-hosted from `public/fonts` (Barlow Condensed, Public Sans, Chivo Mono; SIL Open Font License; latin subset), the two above the fold preloaded; the page still works if they fail to load.
 - Verified by `npm test`, `npm run validate` and the QA script (qa/shots.py): the parser, banding, scheduler, export and the workspace states on a synthetic league.
 - Unverified: the 2015 uploader column layout against a live Full-Time uploader; that the exported division names exist in a real league's Full-Time; behaviour on a real league's season.
 
@@ -69,7 +69,7 @@ regrade/
 ```
 
 ## External Services and Dependencies
-Google Fonts (CSS and font files; no key; free). Nothing else. GitHub Pages hosts the static build.
+None at runtime: fonts are self-hosted, so the page makes no third-party requests. GitHub Pages hosts the static build.
 
 ## Important Failure Modes
 - **Results with unmatched team names** (a typo makes one club two teams) → both appear in the bands; the secretary sees the duplicate and fixes the paste. A later version could suggest merges.

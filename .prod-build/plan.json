@@ -27,7 +27,8 @@
         "T04",
         "T05",
         "T06",
-        "T07"
+        "T07",
+        "T08"
       ]
     }
   ],
@@ -251,6 +252,38 @@
       "notes": "added after measuring; plan changed openly\n[2026-09-27 skip] measured worse: CLS 0.71 with non-blocking fonts (E0045); reverted; LCP 2.7 s stays on throttled mobile, desktop measured separately",
       "base": "7e1721d",
       "started_after": 43
+    },
+    {
+      "id": "T08",
+      "title": "Self-host the three fonts and preload the critical two",
+      "objective": "Remove the web-font swap shift (desktop CLS 0.854, E0047) and the third-party font round trips; keep the design identical",
+      "role": "performance",
+      "size": "S",
+      "deps": [
+        "T04"
+      ],
+      "writes": [
+        "index.html",
+        "src/style.css",
+        "public/fonts/**",
+        "README.md",
+        "CLAUDE.md",
+        "devpost/spec.md"
+      ],
+      "acceptance": [
+        "desktop and mobile CLS < 0.1 on the live URL",
+        "no requests to third-party origins"
+      ],
+      "verify": [
+        "npm run build",
+        "python3 qa/shots.py",
+        "observe: Lighthouse desktop and mobile on the live URL after deploy show CLS under 0.1 and accessibility 100"
+      ],
+      "rollback": "git revert the T08 commit",
+      "status": "doing",
+      "notes": "T07 (non-blocking CSS) made CLS worse and was reverted; this removes the cause instead",
+      "base": "1e77e21",
+      "started_after": 48
     }
   ]
 }
