@@ -230,10 +230,13 @@
         "python3 .prod-build/pb.py report .prod-build/DELIVERY.md"
       ],
       "rollback": "n/a",
-      "status": "doing",
+      "status": "done",
       "notes": "the learner writes the Devpost copy; the video link is pasted by the learner after upload\n[2026-09-27 start] T05 video still rendering; T06 gate work runs in parallel",
       "base": "7e1721d",
-      "started_after": 38
+      "started_after": 38,
+      "evidence": [
+        "E0092"
+      ]
     },
     {
       "id": "T07",

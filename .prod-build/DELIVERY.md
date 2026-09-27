@@ -32,7 +32,7 @@
 - Built output has no local paths or email [E0041]
 - Code review workflow: 53 findings raised, 43 confirmed, fixed or triaged in `.prod-build/reports/review.md` [E0016]
 - Four final reviews (user, engineering, reliability, founder), 43 findings, fixed or listed with reasons in `.prod-build/reports/final-reviews.md` [E0088]
-- Demo video QA after re-recording: see T05/T06 evidence [E0064]; the re-recorded cut is checked in the final message
+- Demo video: first cut QA passed [E0064]; re-recorded from the final live site, QA with speech recognition passed and every contact sheet reviewed [E0091]
 
 ## Deployment
 - Production: https://itssaharsh.github.io/regrade/ on GitHub Pages via Actions, gated on typecheck, test and validate; deployed from e8c2ad6 and smoke-tested [E0077]; measured live [E0086]; rollback: revert the code commit (never the ledger) and let Pages redeploy (CLAUDE.md, L-0002)
