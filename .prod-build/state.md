@@ -18,3 +18,6 @@ Deadline: 2026-10-26 17:00 EDT (2026-10-27 02:30 IST). Live: https://itssaharsh.
 
 ## Next step
 When the review lands: write reports/review.md, T02 done, T03 fixes (RED tests for the bye surfacing), push, T04 live ×3, then re-record the video from the fixed live site (story: bands → generate → move visible team + regenerate → week 3 → export → shortfall via slots panel at top → tech → end).
+
+## Ledger note (2026-09-27)
+E0047 and E0048 were removed: they were appended while evidence.jsonl held git conflict markers from a conflicted revert (E0047 had an empty prev hash, breaking the chain) and both measured the pre-revert deployment. Plan statuses were restored from commit 541d808 after the same revert reset T04 and T05. Lighthouse is re-run below on the reverted site.
