@@ -232,3 +232,7 @@ table.grid.empty td.cell{background:var(--surface-sunken)}
 .clubs{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
 .clubs h3{font-size:18px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
 .club-text{white-space:pre-wrap;font:12px/1.55 var(--ff-mono);background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;margin:8px 0 10px;max-height:260px;overflow:auto}
+/* a panel's main action: ink, so Generate stays the only orange button on screen */
+.btn.ink{background:var(--ink);color:var(--canvas)}
+@media (hover:hover) and (pointer:fine){.btn.ink:hover{background:#333}}
+@media (forced-colors:active){.btn.ink{border:1px solid ButtonText}}

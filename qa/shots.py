@@ -74,6 +74,28 @@ with sync_playwright() as p:
     if 'Under 9 Gold' not in page.locator('#export').inner_text(): fails.append('typed division name not exported')
     print('interactions: cells', cells, '| chips', chips, '| byes', byes[:90])
     ctx.close()
+    # reading results written any way: the review screen, driven by a QA test double for the API (scripts/mock-reading.ts)
+    import subprocess, json as _json
+    mock = subprocess.run(['node', '--experimental-strip-types', '--no-warnings', 'scripts/mock-reading.ts'], capture_output=True, text=True, check=True).stdout
+    ctx = b.new_context(viewport={'width': 1440, 'height': 900}); page = ctx.new_page(); errs = []
+    page.on('pageerror', lambda e: errs.append(str(e)))
+    page.route('**/api/read-results', lambda r: r.fulfill(status=200, content_type='application/json', body=_json.dumps({'enabled': True, 'model': 'QA test double'}) if r.request.method == 'GET' else mock))
+    page.goto(base + '/', wait_until='load'); page.wait_for_timeout(400)
+    page.click('#own'); page.wait_for_timeout(300)
+    if page.locator('#read').count() == 0: fails.append('Read with AI button missing when the API says enabled')
+    page.click('#sample-msg'); page.click('#read'); page.wait_for_selector('#review-h', timeout=5000)
+    page.screenshot(path='qa/review-1440.png', full_page=True)
+    rv = page.locator('#import').inner_text()
+    if 'read 23 results' not in rv.lower(): fails.append('review heading: ' + rv[:80])
+    if 'is Westcombe Wanderers Golds' not in rv: fails.append('short name not shown as matched')
+    if 'postponed' not in rv: fails.append('skipped postponed line not listed')
+    page.add_script_tag(url='https://cdn.jsdelivr.net/npm/axe-core@4/axe.min.js'); page.wait_for_timeout(200)
+    for v in page.evaluate("axe.run({runOnly:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']})")['violations']: fails.append(f"axe review: {v['id']} x{len(v['nodes'])} {v['nodes'][0]['target']}")
+    page.click('#read-add'); page.wait_for_timeout(400)
+    summary = page.locator('#import').inner_text()
+    if '167 results' not in summary or 'read from text' not in summary: fails.append('add did not merge the results: ' + summary[:120])
+    if errs: fails.append('review page errors: ' + '; '.join(errs[:2]))
+    ctx.close()
     # phone: generate reveals the grid
     ctx = b.new_context(viewport={'width': 390, 'height': 844}); page = ctx.new_page()
     page.goto(base + '/', wait_until='load'); page.wait_for_timeout(400); page.click('#generate'); page.wait_for_timeout(1200)

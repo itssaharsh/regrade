@@ -266,12 +266,12 @@ function renderReview(el: HTMLElement): void {
   el.innerHTML = `<h2 id="import-h">Results</h2>
     <h3 id="review-h" tabindex="-1" class="review-h">Read ${good.length} result${good.length === 1 ? '' : 's'} from ${sourceLines(intake.text).filter(l => l.trim()).length} lines</h3>
     <p class="small muted">${intake.replay ? `${esc(intake.replay)}. ` : ''}${esc(result.model)} read the text in ${(result.ms / 1000).toFixed(1)} s. Every row below was checked against the line it came from; nothing is added until you confirm.</p>
-    <ol class="read-rows">${good.map(item).join('')}</ol>
-    ${held.length ? `<p class="small"><b>Held back (${held.length})</b></p><ol class="read-rows">${held.map(item).join('')}</ol>` : ''}
+    <ol class="read-rows" tabindex="0" aria-label="Results read, each with the line it came from">${good.map(item).join('')}</ol>
+    ${held.length ? `<p class="small"><b>Held back (${held.length})</b></p><ol class="read-rows" tabindex="0" aria-label="Results held back">${held.map(item).join('')}</ol>` : ''}
     ${result.rejected.length ? `<p class="small"><b>Not used: not in the line they cite (${result.rejected.length})</b></p><ul class="small read-list">${result.rejected.map(x => `<li>line ${x.row.line}: ${esc(x.reason)}</li>`).join('')}</ul>` : ''}
     ${result.skipped.length ? `<p class="small"><b>Skipped (${result.skipped.length})</b></p><ul class="small read-list">${result.skipped.map(x => `<li>line ${x.line}: ${esc(x.reason)}</li>`).join('')}</ul>` : ''}
     ${unread.length ? `<details class="small"><summary>Lines not read as results (${unread.length})</summary><ul class="read-list">${unread.map(x => `<li>line ${x.i}: ${esc(x.l.trim())}</li>`).join('')}</ul></details>` : ''}
-    <div class="row"><button class="btn small primary" type="button" id="read-add"${good.length ? '' : ' aria-disabled="true"'}>Add ${good.length} result${good.length === 1 ? '' : 's'}</button><button class="btn small ghost" type="button" id="read-replace"${good.length ? '' : ' aria-disabled="true"'}>Use only these</button><button class="btn small ghost" type="button" id="read-back">Back to the text</button></div>
+    <div class="row"><button class="btn small ink" type="button" id="read-add"${good.length ? '' : ' aria-disabled="true"'}>Add ${good.length} result${good.length === 1 ? '' : 's'}</button><button class="btn small ghost" type="button" id="read-replace"${good.length ? '' : ' aria-disabled="true"'}>Use only these</button><button class="btn small ghost" type="button" id="read-back">Back to the text</button></div>
     <p class="caption">Adding results re-proposes the bands from all results.</p>`
   $('#read-add').addEventListener('click', () => { if (good.length) applyRead('add') })
   $('#read-replace').addEventListener('click', () => { if (good.length) applyRead('replace') })
@@ -304,7 +304,7 @@ function renderImport(): void {
     ${intake.status === 'error' ? `<p class="reason" role="alert">${esc(intake.message)}</p>` : ''}
     ${state.importNote ? `<p class="small load-note">${esc(state.importNote)}</p>` : ''}
     ${state.importErrors.length ? `<div role="alert" id="draft-errors"><ul class="errors">${state.importErrors.slice(0, 6).map(e => `<li>${esc(e.message)}</li>`).join('')}${state.importErrors.length > 6 ? `<li>and ${state.importErrors.length - 6} more</li>` : ''}</ul></div>` : ''}
-    <div class="row"><button class="btn small" type="button" id="load"${reading ? ' aria-disabled="true"' : ''}>Load results</button>${ai ? `<button class="btn small primary" type="button" id="read"${reading ? ' aria-disabled="true"' : ''}>Read with AI</button>` : ''}<button class="btn small ghost" type="button" id="sample">Load sample results</button><button class="btn small ghost" type="button" id="cancel">Cancel</button></div>`
+    <div class="row"><button class="btn small" type="button" id="load"${reading ? ' aria-disabled="true"' : ''}>Load results</button>${ai ? `<button class="btn small ink" type="button" id="read"${reading ? ' aria-disabled="true"' : ''}>Read with AI</button>` : ''}<button class="btn small ghost" type="button" id="sample">Load sample results</button><button class="btn small ghost" type="button" id="cancel">Cancel</button></div>`
   const ta = $('#draft') as HTMLTextAreaElement
   ta.addEventListener('input', () => { state.importDraft = ta.value })
   document.querySelector('#sample-msg')?.addEventListener('click', () => { state.importDraft = sampleMessage(); intake = { status: 'idle' }; render(); $('#draft').focus() })

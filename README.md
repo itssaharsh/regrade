@@ -16,11 +16,12 @@ Live: https://regrade-app.vercel.app · Video: (link in the Devpost submission)
 Volunteer fixture secretaries of mini-soccer leagues in England re-grade teams by results every few weeks and re-make the fixtures across shared central-venue pitches. The FA's Full-Time system schedules fixed divisions and checks clashes, but does not re-band by results, so the work happens in Excel: *"around 4-5 hours per age group each time"* ([a Kent league fixtures secretary, FA Grassroots Technology forum](https://grassrootstechnology.thefa.com/support/discussions/topics/48000566535)); at least two other leagues describe the same spreadsheet-then-upload workaround ([forum thread](https://grassrootstechnology.thefa.com/support/discussions/topics/48000559638)). The FA's own 52-page Full-Time Fixtures guide documents venue sharing, timeslots, a conflict checker and the uploader's nine-column CSV, and mentions banding nowhere ([guide, v5.1](https://www.thefa.com/-/media/cfa/sheffieldfa/files/technology/fixtures.ashx?la=en)). From the 2026-27 season the FA's FutureFit changes youth formats, so leagues are re-planning divisions and slots now ([England Football](https://www.englandfootball.com/articles/2025/Feb/21/Future-Fit-grassroots-youth-football-england-update-20252102)).
 
 ## What it does
-1. Paste a block's results (the uploader layout with scores, or a simple table; comma- or tab-separated). Bad rows are named: missing or impossible scores, a team playing itself, names that would run as spreadsheet formulas.
+1. Paste results: a table (the uploader layout with scores, or a simple table; comma- or tab-separated), or **results written any way**, like a coaches' message thread or an email, and use **Read with AI**. A Gemini model reads the text; code keeps a row only if both team names and both scores are in the line it cites, matches short names to known teams ("Westcombe Golds" → Westcombe Wanderers Golds), and you review every row beside its source line before adding. Bad rows are named either way: missing or impossible scores, a team playing itself, duplicates, names that would run as spreadsheet formulas.
 2. Teams are ranked by goal difference per game and split into bands (as many as the file has divisions; adjustable). Results only come from games inside a division, so each division above counts as 2 goals a game stronger, the spread a Kent league aims for; on the sample this places 16 of 48 teams away from their true strength against 24 for the league's own guess (`npm run validate`). Every team that changes division shows the one it was in. Drag a team, or use the arrows.
 3. Set the Saturday slots: venue names, pitches per venue, kick-off times and the first Saturday (checked to be a Saturday).
 4. **Generate 4 weeks**: pairings that avoid any game already played this season, every team within one home game of its away games, one fixture per slot and pitch, each band grouped at as few venues as possible (splits are logged). When a band is too small or has already played nearly everyone, a rule is relaxed and the red counter says which band and why. Odd bands rest one team each Saturday, in turn, listed under the grid. Fixtures that don't fit are listed with the pitches or kick-offs to add.
 5. Download **fixtureupload.csv** in the Full-Time uploader's nine-column layout, each band under the division name from your results file (or one you type when the file has none). The download is blocked while the block is out of date, and the panel says when fixtures that didn't fit are missing from the file.
+6. Send each club its own fixtures: **Club fixture lists** show a club's teams Saturday by Saturday, byes included, ready to paste into an email or club chat, or download all clubs as one CSV.
 
 ## Evidence for each judging criterion
 | Criterion (rules wording) | Where to look |
@@ -33,7 +34,8 @@ Volunteer fixture secretaries of mini-soccer leagues in England re-grade teams b
 ## What's real and what's synthetic
 | Part | Status |
 |---|---|
-| Results parsing, banding, scheduler, CSV export | real, deterministic, tested |
+| Results parsing, banding, scheduler, CSV export, club lists | real, deterministic, tested |
+| Reading results written any way | real Gemini call on the live site (needs the learner's key in Vercel); rows checked against their source lines in code; the sample message is fictional |
 | Sample league (Oakford & District Youth League, U9) | synthetic: 24 fictional clubs, 48 teams, six Saturdays of generated results, labelled on screen |
 | Uploader column layout | from the FA's 2015 guide (v5.1); confirm against your league's uploader before use |
 | Deployment | Vercel (static page plus one function, `api/read-results`); the old GitHub Pages address redirects. Scheduling needs no network after the page loads (no service worker, so a reload needs a connection) |
@@ -61,7 +63,7 @@ Decisions: [docs/adr](docs/adr). Design: [UI-SPEC.md](UI-SPEC.md).
 
 ## Limitations
 - The uploader layout is from a 2015 guide; a league admin should confirm it is current.
-- Results must be pasted; no league-level export from Full-Time was found.
+- Results must be pasted (as a table, or as text for the reading step); no league-level export from Full-Time was found. The reading step sends the text to Google Gemini; on a free-tier key Google may use it to improve its products.
 - One age group and three bands per workspace; mini-soccer central venues in England.
 - Each exported division, venue and pitch name must already exist in Full-Time exactly as written; the export uses the names in your results file and your slot setup, and pitches are named Pitch 1, Pitch 2 and so on.
 - The 2-goals-a-game gap between divisions is a fixed assumption taken from one league's target spread; a league whose divisions are closer or further apart would want a different figure.
@@ -70,4 +72,5 @@ Decisions: [docs/adr](docs/adr). Design: [UI-SPEC.md](UI-SPEC.md).
 - Nothing is saved between visits: the downloaded file is the record.
 
 ## AI use
-Planned and built with a coding agent through the Devpost Learn skill pack; see CLAUDE.md. No model runs in the app.
+- **Building:** planned and built with a coding agent through the Devpost Learn skill pack; see CLAUDE.md.
+- **In the app:** one step, reading results written any way. A Google Gemini model (the learner's own key, via the Vercel AI SDK) only extracts rows and the line each came from; code keeps a row only if its names and scores are in that line, and you confirm before anything is added (docs/adr/0005). Banding, scheduling, the counters and the export use no model.
