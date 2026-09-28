@@ -6,7 +6,7 @@ export const MAX_LINES = 150
 
 /** One result as the model read it: team names exactly as written in the line it cites. */
 export interface ReadRow { line: number; home: string; away: string; homeScore: number; awayScore: number; division?: string; date?: string }
-export interface ReadSkip { line: number; reason: string }
+export interface ReadSkip { line: number; reason: string; hasScore?: boolean }
 export interface ReadOutput { rows: ReadRow[]; skipped: ReadSkip[] }
 /** What the function returns: rows that passed the grounding check, rows that didn't (and why), lines the model skipped. */
 export interface IntakeResult { rows: ReadRow[]; rejected: { row: ReadRow; reason: string }[]; skipped: ReadSkip[]; model: string; ms: number }
@@ -35,7 +35,8 @@ export const SYSTEM = [
   '- homeScore and awayScore: whole numbers as written;',
   '- division: only if a division is written on that line or in a heading above it, copied as written;',
   '- date: only if a date is written on that line or in a heading above it, as DD/MM/YYYY, or DD/MM when no year is written.',
-  'Lines about a game that was not played or has no score (postponed, cancelled, abandoned, awarded) go in skipped with a short reason.',
+  'A draw is a result: 0-0, 1-1 and 2 - 2 are scores, so return those games as rows.',
+  'Lines about a game that was not played or has no final score (postponed, cancelled, abandoned, awarded) go in skipped with a short reason.',
   'Ignore greetings, headings and chat. Never invent a team, score or line number; never correct spellings.',
 ].join('\n')
 
@@ -81,7 +82,11 @@ export function checkOutput(raw: ReadOutput, text: string): Pick<IntakeResult, '
     seen.add(key)
     rows.push(groundDetails(r, text))
   }
+  // a skipped line that still shows a score and no word like "postponed" is flagged for the secretary to check
+  const scoreLike = /\b\d{1,2}\s*[-–]\s*\d{1,2}\b|\b\d{1,2}\b.*\b\d{1,2}\b/
+  const unplayed = /postpon|cancel|abandon|void|award|walkover|w\/o|called off|half[- ]?time|\bht\b/i
   const skipped = (raw.skipped ?? []).filter(s => Number.isInteger(s.line) && s.line >= 1 && s.line <= lines.length)
+    .map(s => (scoreLike.test(lines[s.line - 1]) && !unplayed.test(lines[s.line - 1]) ? { ...s, hasScore: true } : s))
   return { rows: rows.sort((a, b) => a.line - b.line), rejected, skipped }
 }
 

@@ -220,8 +220,16 @@ async function readWithAi(text: string): Promise<void> {
     if (el && intake.status === 'reading') el.textContent = `${((Date.now() - intake.started) / 1000).toFixed(0)} s`
   }, 250)
   try {
-    const res = await fetch('api/read-results', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) })
-    const body = await res.json().catch(() => null)
+    let res: Response, body: { busy?: boolean; message?: string } | null
+    // Gemini is often briefly overloaded: when every model was busy, wait and ask again, twice, saying so on screen
+    for (let attempt = 1; ; attempt++) {
+      res = await fetch('api/read-results', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) })
+      body = await res.json().catch(() => null)
+      if (res.ok || !body?.busy || attempt === 3) break
+      const note = document.getElementById('read-retry')
+      if (note) note.textContent = `Gemini is busy; trying again (${attempt + 1} of 3)…`
+      await new Promise(r => setTimeout(r, 3000 * attempt))
+    }
     if (!res.ok || !body) {
       intake = { status: 'error', message: body?.message ?? 'Reading with AI isn\'t available here. Paste a results table and use Load results.' }
     } else {
@@ -255,6 +263,7 @@ function applyRead(mode: 'add' | 'replace'): void {
 function renderReview(el: HTMLElement): void {
   if (intake.status !== 'review') return
   const { result, rows } = intake
+  const srcLines = sourceLines(intake.text)
   const good = rows.filter(r => !r.problem), held = rows.filter(r => r.problem)
   const used = new Set([...result.rows.map(r => r.line), ...result.rejected.map(r => r.row.line), ...result.skipped.map(s => s.line)])
   const unread = sourceLines(intake.text).map((l, i) => ({ l, i: i + 1 })).filter(x => x.l.trim() && !used.has(x.i))
@@ -269,7 +278,7 @@ function renderReview(el: HTMLElement): void {
     <ol class="read-rows" tabindex="0" aria-label="Results read, each with the line it came from">${good.map(item).join('')}</ol>
     ${held.length ? `<p class="small"><b>Held back (${held.length})</b></p><ol class="read-rows" tabindex="0" aria-label="Results held back">${held.map(item).join('')}</ol>` : ''}
     ${result.rejected.length ? `<p class="small"><b>Not used: not in the line they cite (${result.rejected.length})</b></p><ul class="small read-list">${result.rejected.map(x => `<li>line ${x.row.line}: ${esc(x.reason)}</li>`).join('')}</ul>` : ''}
-    ${result.skipped.length ? `<p class="small"><b>Skipped (${result.skipped.length})</b></p><ul class="small read-list">${result.skipped.map(x => `<li>line ${x.line}: ${esc(x.reason)}</li>`).join('')}</ul>` : ''}
+    ${result.skipped.length ? `<p class="small"><b>Skipped (${result.skipped.length})</b></p><ul class="small read-list">${result.skipped.map(x => `<li${x.hasScore ? ' class="check"' : ''}>line ${x.line}: ${esc(x.reason)}${x.hasScore ? ` <b>This line has a score; check it</b> (“${esc(srcLines[x.line - 1]?.trim() ?? '')}”)` : ''}</li>`).join('')}</ul>` : ''}
     ${unread.length ? `<details class="small"><summary>Lines not read as results (${unread.length})</summary><ul class="read-list">${unread.map(x => `<li>line ${x.i}: ${esc(x.l.trim())}</li>`).join('')}</ul></details>` : ''}
     <div class="row"><button class="btn small ink" type="button" id="read-add"${good.length ? '' : ' aria-disabled="true"'}>Add ${good.length} result${good.length === 1 ? '' : 's'}</button><button class="btn small ghost" type="button" id="read-replace"${good.length ? '' : ' aria-disabled="true"'}>Use only these</button><button class="btn small ghost" type="button" id="read-back">Back to the text</button></div>
     <p class="caption">Adding results re-proposes the bands from all results.</p>`
@@ -300,7 +309,7 @@ function renderImport(): void {
     <label class="sr-only" for="draft">Results</label>
     <textarea id="draft" maxlength="${MAX_CHARS}" placeholder="Date,Time,Division,Home Team,Away Team,Venue,Pitch,Home Score,Away Score&#10;12/09/2026,09:00,Division 1,Oakford Colts Reds,Ashby Lions Blues,Oakford Leisure Centre,Pitch 1,3,1" aria-describedby="draft-help${state.importErrors.length ? ' draft-errors' : ''}"${state.importErrors.length ? ' aria-invalid="true"' : ''}${reading ? ' readonly' : ''}>${esc(state.importDraft)}</textarea>
     <p id="draft-help" class="caption">${ai ? `Read with AI sends the text to Google Gemini to read it; Regrade doesn't store it. <button type="button" class="linkish" id="sample-msg">Paste a sample message</button> (fictional).` : 'Dates as DD/MM/YYYY. Team names must match between rows. The Division column names the divisions your export will use.'}</p>
-    ${intake.status === 'reading' ? `<p class="small reading" role="status">Reading ${intake.lines} lines with Gemini… <span id="read-elapsed" class="num">0 s</span></p>` : ''}
+    ${intake.status === 'reading' ? `<p class="small reading" role="status">Reading ${intake.lines} lines with Gemini… <span id="read-elapsed" class="num">0 s</span> <span id="read-retry"></span></p>` : ''}
     ${intake.status === 'error' ? `<p class="reason" role="alert">${esc(intake.message)}</p>` : ''}
     ${state.importNote ? `<p class="small load-note">${esc(state.importNote)}</p>` : ''}
     ${state.importErrors.length ? `<div role="alert" id="draft-errors"><ul class="errors">${state.importErrors.slice(0, 6).map(e => `<li>${esc(e.message)}</li>`).join('')}${state.importErrors.length > 6 ? `<li>and ${state.importErrors.length - 6} more</li>` : ''}</ul></div>` : ''}

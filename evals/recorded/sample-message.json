@@ -1,0 +1,232 @@
+{
+  "case": "sample-message",
+  "recordedAt": "2026-09-28T13:39:10.876Z",
+  "status": 200,
+  "rows": [
+    {
+      "line": 4,
+      "home": "Elmbridge Eagles Blacks",
+      "away": "Elmbridge Eagles Whites",
+      "homeScore": 5,
+      "awayScore": 1,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 5,
+      "home": "Westcombe Golds",
+      "away": "Caldicott Cubs Whites",
+      "homeScore": 3,
+      "awayScore": 2,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 6,
+      "home": "Kingsley Juniors Blues",
+      "away": "Ashby Lions Blacks",
+      "homeScore": 2,
+      "awayScore": 0,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 7,
+      "home": "Hazelwood Hornets Comets",
+      "away": "Padley Park Hawks",
+      "homeScore": 6,
+      "awayScore": 1,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 8,
+      "home": "Dunmore Dynamos Tigers",
+      "away": "Ashby Lions Whites",
+      "homeScore": 3,
+      "awayScore": 0,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 9,
+      "home": "Netherfield Tigers",
+      "away": "Oakford Colts Reds",
+      "homeScore": 2,
+      "awayScore": 1,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 11,
+      "home": "Ravenhill Rangers Stars",
+      "away": "Ivybrook Blues",
+      "homeScore": 0,
+      "awayScore": 2,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 12,
+      "home": "Kingsley Juniors Reds",
+      "away": "Westcombe Wanderers Greens",
+      "homeScore": 0,
+      "awayScore": 1,
+      "division": "Division 1",
+      "date": "17/10"
+    },
+    {
+      "line": 15,
+      "home": "Ravenhill Rangers Comets",
+      "away": "Fenwick Falcons Eagles",
+      "homeScore": 3,
+      "awayScore": 1,
+      "division": "Division 2",
+      "date": "17/10"
+    },
+    {
+      "line": 17,
+      "home": "Caldicott Cubs Blacks",
+      "away": "Netherfield Athletic Lions",
+      "homeScore": 0,
+      "awayScore": 2,
+      "division": "Division 2",
+      "date": "17/10"
+    },
+    {
+      "line": 18,
+      "home": "Ferncliffe Eagles",
+      "away": "Redmoor Eagles",
+      "homeScore": 2,
+      "awayScore": 1,
+      "division": "Division 2",
+      "date": "17/10"
+    },
+    {
+      "line": 19,
+      "home": "Sedgemoor Saints Stars",
+      "away": "Lynford Youth Whites",
+      "homeScore": 1,
+      "awayScore": 2,
+      "division": "Division 2",
+      "date": "17/10"
+    },
+    {
+      "line": 20,
+      "home": "Hartwell Greens",
+      "away": "Lynford Youth Blacks",
+      "homeScore": 2,
+      "awayScore": 8,
+      "division": "Division 2",
+      "date": "17/10"
+    },
+    {
+      "line": 21,
+      "home": "Brindley Youth Tigers",
+      "away": "Quenby Colts Tigers",
+      "homeScore": 5,
+      "awayScore": 3,
+      "division": "Division 2",
+      "date": "17/10"
+    },
+    {
+      "line": 22,
+      "home": "Stonebridge United Blues",
+      "away": "Stonebridge United Reds",
+      "homeScore": 1,
+      "awayScore": 2,
+      "division": "Division 2",
+      "date": "17/10"
+    },
+    {
+      "line": 25,
+      "home": "Fenwick Falcons Hawks",
+      "away": "Silverbeck Stars",
+      "homeScore": 5,
+      "awayScore": 2,
+      "division": "Division 3",
+      "date": "17/10"
+    },
+    {
+      "line": 26,
+      "home": "Silverbeck Comets",
+      "away": "Norcott Town Greens",
+      "homeScore": 0,
+      "awayScore": 0,
+      "division": "Division 3",
+      "date": "17/10"
+    },
+    {
+      "line": 27,
+      "home": "Sedgemoor Saints Comets",
+      "away": "Quenby Colts Lions",
+      "homeScore": 2,
+      "awayScore": 4,
+      "division": "Division 3",
+      "date": "17/10"
+    },
+    {
+      "line": 28,
+      "home": "Ferncliffe Hawks",
+      "away": "Dunmore Dynamos Lions",
+      "homeScore": 2,
+      "awayScore": 4,
+      "division": "Division 3",
+      "date": "17/10"
+    },
+    {
+      "line": 29,
+      "home": "Oakford Colts Blues",
+      "away": "Hazelwood Hornets Stars",
+      "homeScore": 2,
+      "awayScore": 3,
+      "division": "Division 3",
+      "date": "17/10"
+    },
+    {
+      "line": 30,
+      "home": "Brindley Lions",
+      "away": "Padley Park Eagles",
+      "homeScore": 2,
+      "awayScore": 2,
+      "division": "Division 3",
+      "date": "17/10"
+    },
+    {
+      "line": 31,
+      "home": "Hartwell Rovers Golds",
+      "away": "Ivybrook Reds",
+      "homeScore": 1,
+      "awayScore": 3,
+      "division": "Division 3",
+      "date": "17/10"
+    },
+    {
+      "line": 32,
+      "home": "Marlfield Green Golds",
+      "away": "Marlfield Green Greens",
+      "homeScore": 1,
+      "awayScore": 1,
+      "division": "Division 3",
+      "date": "17/10"
+    }
+  ],
+  "rejected": [],
+  "skipped": [
+    {
+      "line": 10,
+      "reason": "commentary"
+    },
+    {
+      "line": 16,
+      "reason": "postponed"
+    },
+    {
+      "line": 34,
+      "reason": "commentary"
+    }
+  ],
+  "model": "gemini-3.1-flash-lite",
+  "ms": 6056,
+  "tried": []
+}

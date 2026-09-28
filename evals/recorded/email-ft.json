@@ -1,0 +1,35 @@
+{
+  "case": "email-ft",
+  "recordedAt": "2026-09-28T13:39:13.285Z",
+  "status": 200,
+  "rows": [
+    {
+      "line": 4,
+      "home": "Redmoor Eagles",
+      "away": "Silverbeck Stars",
+      "homeScore": 1,
+      "awayScore": 4,
+      "division": "Division 2",
+      "date": "17/10/2026"
+    },
+    {
+      "line": 5,
+      "home": "Quenby Colts Tigers",
+      "away": "Sedgemoor Saints Stars",
+      "homeScore": 0,
+      "awayScore": 0,
+      "division": "Division 2",
+      "date": "17/10/2026"
+    }
+  ],
+  "rejected": [],
+  "skipped": [
+    {
+      "line": 6,
+      "reason": "abandoned"
+    }
+  ],
+  "model": "gemini-3.1-flash-lite",
+  "ms": 2400,
+  "tried": []
+}

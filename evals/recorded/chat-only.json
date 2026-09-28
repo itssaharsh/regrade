@@ -1,0 +1,24 @@
+{
+  "case": "chat-only",
+  "recordedAt": "2026-09-28T13:39:21.359Z",
+  "status": 200,
+  "rows": [],
+  "rejected": [],
+  "skipped": [
+    {
+      "line": 1,
+      "reason": "no game reported"
+    },
+    {
+      "line": 2,
+      "reason": "no game reported"
+    },
+    {
+      "line": 3,
+      "reason": "no game reported"
+    }
+  ],
+  "model": "gemini-3.1-flash-lite",
+  "ms": 4494,
+  "tried": []
+}

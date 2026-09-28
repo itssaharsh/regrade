@@ -373,9 +373,16 @@
         "observe: live intake of the golden messy results on the Vercel URL returns grounded rows and the review screen"
       ],
       "rollback": "AI_ENABLED=false in Vercel env (the button hides and the CSV path remains)",
-      "status": "doing",
+      "status": "done",
       "base": "1918fc8",
-      "started_after": 103
+      "started_after": 103,
+      "evidence": [
+        "E0122",
+        "E0123",
+        "E0124",
+        "E0125",
+        "E0126"
+      ]
     },
     {
       "id": "T11",

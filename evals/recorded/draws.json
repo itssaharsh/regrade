@@ -1,0 +1,42 @@
+{
+  "case": "draws",
+  "recordedAt": "2026-09-28T13:39:43.733Z",
+  "status": 200,
+  "rows": [
+    {
+      "line": 2,
+      "home": "Quenby Colts Tigers",
+      "away": "Sedgemoor Saints Stars",
+      "homeScore": 0,
+      "awayScore": 0,
+      "date": "17/10"
+    },
+    {
+      "line": 3,
+      "home": "Redmoor Eagles",
+      "away": "Silverbeck Stars",
+      "homeScore": 2,
+      "awayScore": 2,
+      "date": "17/10"
+    },
+    {
+      "line": 4,
+      "home": "Norcott Town Golds",
+      "away": "Lynford Youth Blacks",
+      "homeScore": 1,
+      "awayScore": 1,
+      "date": "17/10"
+    }
+  ],
+  "rejected": [],
+  "skipped": [
+    {
+      "line": 1,
+      "reason": "No game played",
+      "hasScore": true
+    }
+  ],
+  "model": "gemini-3.1-flash-lite",
+  "ms": 5443,
+  "tried": []
+}

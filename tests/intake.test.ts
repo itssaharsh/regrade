@@ -76,7 +76,8 @@ const mock = (output: ReadOutput | string) => new MockLanguageModelV4({
 })
 const req = (body: unknown) => new Request('http://x/api/read-results', { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body), headers: { 'content-type': 'application/json' } })
 let ipN = 0
-const deps = (model: ReturnType<typeof mock>, over: Partial<{ enabled: boolean; ip: string }> = {}) => ({ model, modelId: 'mock', enabled: true, ip: `10.0.0.${++ipN}`, ...over })
+const deps = (model: ReturnType<typeof mock>, over: Partial<{ enabled: boolean; ip: string }> = {}) => ({ models: [{ id: 'mock', model }], enabled: true, ip: `10.0.0.${++ipN}`, ...over })
+const busy = () => new MockLanguageModelV4({ doGenerate: async () => { throw Object.assign(new Error('This model is currently experiencing high demand'), { name: 'AI_APICallError', statusCode: 503 }) } })
 
 describe('the read-results function', () => {
   it('returns grounded rows and lists the invented one', async () => {
@@ -100,10 +101,29 @@ describe('the read-results function', () => {
     const res = await handle(req({ text: TEXT }), deps(mock('{"rows": [ {"line": "three"')))
     expect(res.status).toBe(502); expect((await res.json()).error).toBe('model_error')
   })
+  it('hands over to the next model when one is busy, and says which model read it', async () => {
+    const res = await handle(req({ text: TEXT }), { models: [{ id: 'busy-model', model: busy() }, { id: 'second-model', model: mock({ rows: [row({})], skipped: [] }) }], enabled: true, ip: `10.0.1.${++ipN}` })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.model).toBe('second-model'); expect(body.tried).toEqual([{ model: 'busy-model', error: 'HTTP 503' }]); expect(body.rows).toHaveLength(1)
+  })
+  it('says the models are busy when every model fails', async () => {
+    const res = await handle(req({ text: TEXT }), { models: [{ id: 'a', model: busy() }, { id: 'b', model: busy() }], enabled: true, ip: `10.0.1.${++ipN}`, pauseMs: 1 })
+    const body = await res.json()
+    expect(res.status).toBe(502); expect(body.tried).toHaveLength(4); expect(body.message).toMatch(/busy/)
+  })
   it('limits each address to 6 reads a minute', () => {
     const t = 1_000_000
     for (let i = 0; i < 6; i++) expect(rateLimited('9.9.9.9', t + i)).toBeNull()
     expect(rateLimited('9.9.9.9', t + 10)).toBeGreaterThan(0)
     expect(rateLimited('9.9.9.9', t + 61_000)).toBeNull()
+  })
+})
+
+describe('a skipped line that shows a score is flagged for checking', () => {
+  it('flags "0-0" skipped as no score, not a postponement', () => {
+    const text = 'Quenby Colts Tigers v Sedgemoor Saints Stars 0-0\nNorcott Town Golds v Lynford Youth Blacks postponed\nHT: Oakford Colts Reds 2 Ashby Lions Whites 1 (abandoned)'
+    const out = checkOutput({ rows: [], skipped: [{ line: 1, reason: 'no score' }, { line: 2, reason: 'postponed' }, { line: 3, reason: 'abandoned' }] }, text)
+    expect(out.skipped.map(s => !!s.hasScore)).toEqual([true, false, false])
   })
 })
