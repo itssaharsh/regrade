@@ -1,0 +1,159 @@
+You are helping the volunteer fixtures secretary of a youth football league. Below are this season's results as CSV (48 teams in 3 divisions).
+
+Do two things:
+1. Re-band the 48 teams into 3 divisions of 16 by their results.
+2. Produce the next 4 Saturdays of fixtures (24/10/2026, 31/10/2026, 07/11/2026, 14/11/2026), each fixture between two teams of the same new division, so that:
+   - every team plays exactly once each Saturday;
+   - no pairing has already been played this season (see the results), and no pairing appears twice in the 4 weeks;
+   - over the 4 weeks, each team's home games and away games differ by at most one;
+   - each Saturday uses only these slots, one fixture per venue, pitch and time: venues "Oakford Leisure Centre" (Pitch 1, Pitch 2, Pitch 3, Pitch 4) and "Ashby Playing Fields" (Pitch 1, Pitch 2, Pitch 3, Pitch 4); kick-off times 09:00, 10:00, 11:00.
+
+Output only the FA Full-Time uploader CSV, with this header and 96 rows, dates as DD/MM/YYYY, scores left blank, no commentary:
+Date,Time,Division,Home Team,Away Team,Venue,Pitch,Home Score,Away Score
+
+Results:
+Date,Time,Division,Home Team,Away Team,Venue,Pitch,Home Score,Away Score
+05/09/2026,09:00,Division 1,Elmbridge Eagles Blacks,Ravenhill Rangers Stars,Oakford Leisure Centre,Pitch 1,0,0
+05/09/2026,09:00,Division 1,Kingsley Juniors Reds,Netherfield Athletic Tigers,Oakford Leisure Centre,Pitch 2,3,1
+05/09/2026,09:00,Division 1,Westcombe Wanderers Greens,Dunmore Dynamos Tigers,Oakford Leisure Centre,Pitch 3,2,0
+05/09/2026,09:00,Division 1,Ivybrook Blues,Hazelwood Hornets Comets,Oakford Leisure Centre,Pitch 4,2,1
+05/09/2026,10:00,Division 1,Oakford Colts Reds,Kingsley Juniors Blues,Oakford Leisure Centre,Pitch 1,0,5
+05/09/2026,10:00,Division 1,Ashby Lions Whites,Westcombe Wanderers Golds,Oakford Leisure Centre,Pitch 2,2,3
+05/09/2026,10:00,Division 1,Padley Park Hawks,Elmbridge Eagles Whites,Oakford Leisure Centre,Pitch 3,1,3
+05/09/2026,10:00,Division 1,Ashby Lions Blacks,Caldicott Cubs Whites,Oakford Leisure Centre,Pitch 4,2,0
+12/09/2026,09:00,Division 1,Netherfield Athletic Tigers,Elmbridge Eagles Blacks,Ashby Playing Fields,Pitch 1,0,3
+12/09/2026,09:00,Division 1,Dunmore Dynamos Tigers,Ravenhill Rangers Stars,Ashby Playing Fields,Pitch 2,2,2
+12/09/2026,09:00,Division 1,Hazelwood Hornets Comets,Kingsley Juniors Reds,Ashby Playing Fields,Pitch 3,2,0
+12/09/2026,09:00,Division 1,Kingsley Juniors Blues,Westcombe Wanderers Greens,Ashby Playing Fields,Pitch 4,2,2
+12/09/2026,10:00,Division 1,Westcombe Wanderers Golds,Ivybrook Blues,Ashby Playing Fields,Pitch 1,5,2
+12/09/2026,10:00,Division 1,Elmbridge Eagles Whites,Oakford Colts Reds,Ashby Playing Fields,Pitch 2,4,1
+12/09/2026,10:00,Division 1,Caldicott Cubs Whites,Ashby Lions Whites,Ashby Playing Fields,Pitch 3,1,1
+12/09/2026,10:00,Division 1,Ashby Lions Blacks,Padley Park Hawks,Ashby Playing Fields,Pitch 4,3,2
+19/09/2026,09:00,Division 1,Elmbridge Eagles Blacks,Dunmore Dynamos Tigers,Oakford Leisure Centre,Pitch 1,1,0
+19/09/2026,09:00,Division 1,Netherfield Athletic Tigers,Hazelwood Hornets Comets,Oakford Leisure Centre,Pitch 2,0,3
+19/09/2026,09:00,Division 1,Ravenhill Rangers Stars,Kingsley Juniors Blues,Oakford Leisure Centre,Pitch 3,1,5
+19/09/2026,09:00,Division 1,Kingsley Juniors Reds,Westcombe Wanderers Golds,Oakford Leisure Centre,Pitch 4,3,2
+19/09/2026,10:00,Division 1,Westcombe Wanderers Greens,Elmbridge Eagles Whites,Oakford Leisure Centre,Pitch 1,5,0
+19/09/2026,10:00,Division 1,Ivybrook Blues,Caldicott Cubs Whites,Oakford Leisure Centre,Pitch 2,1,1
+19/09/2026,10:00,Division 1,Oakford Colts Reds,Ashby Lions Blacks,Oakford Leisure Centre,Pitch 3,0,2
+19/09/2026,10:00,Division 1,Ashby Lions Whites,Padley Park Hawks,Oakford Leisure Centre,Pitch 4,2,2
+26/09/2026,09:00,Division 1,Hazelwood Hornets Comets,Elmbridge Eagles Blacks,Ashby Playing Fields,Pitch 1,3,4
+26/09/2026,09:00,Division 1,Kingsley Juniors Blues,Dunmore Dynamos Tigers,Ashby Playing Fields,Pitch 2,1,1
+26/09/2026,09:00,Division 1,Westcombe Wanderers Golds,Netherfield Athletic Tigers,Ashby Playing Fields,Pitch 3,3,0
+26/09/2026,09:00,Division 1,Elmbridge Eagles Whites,Ravenhill Rangers Stars,Ashby Playing Fields,Pitch 4,3,2
+26/09/2026,10:00,Division 1,Caldicott Cubs Whites,Kingsley Juniors Reds,Ashby Playing Fields,Pitch 1,3,0
+26/09/2026,10:00,Division 1,Ashby Lions Blacks,Westcombe Wanderers Greens,Ashby Playing Fields,Pitch 2,4,1
+26/09/2026,10:00,Division 1,Padley Park Hawks,Ivybrook Blues,Ashby Playing Fields,Pitch 3,2,1
+26/09/2026,10:00,Division 1,Ashby Lions Whites,Oakford Colts Reds,Ashby Playing Fields,Pitch 4,3,1
+03/10/2026,09:00,Division 1,Elmbridge Eagles Blacks,Kingsley Juniors Blues,Oakford Leisure Centre,Pitch 1,3,0
+03/10/2026,09:00,Division 1,Hazelwood Hornets Comets,Westcombe Wanderers Golds,Oakford Leisure Centre,Pitch 2,3,1
+03/10/2026,09:00,Division 1,Dunmore Dynamos Tigers,Elmbridge Eagles Whites,Oakford Leisure Centre,Pitch 3,3,3
+03/10/2026,09:00,Division 1,Netherfield Athletic Tigers,Caldicott Cubs Whites,Oakford Leisure Centre,Pitch 4,1,0
+03/10/2026,10:00,Division 1,Ravenhill Rangers Stars,Ashby Lions Blacks,Oakford Leisure Centre,Pitch 1,1,2
+03/10/2026,10:00,Division 1,Kingsley Juniors Reds,Padley Park Hawks,Oakford Leisure Centre,Pitch 2,5,1
+03/10/2026,10:00,Division 1,Westcombe Wanderers Greens,Ashby Lions Whites,Oakford Leisure Centre,Pitch 3,2,1
+03/10/2026,10:00,Division 1,Ivybrook Blues,Oakford Colts Reds,Oakford Leisure Centre,Pitch 4,3,1
+10/10/2026,09:00,Division 1,Westcombe Wanderers Golds,Elmbridge Eagles Blacks,Ashby Playing Fields,Pitch 1,3,1
+10/10/2026,09:00,Division 1,Elmbridge Eagles Whites,Kingsley Juniors Blues,Ashby Playing Fields,Pitch 2,0,1
+10/10/2026,09:00,Division 1,Caldicott Cubs Whites,Hazelwood Hornets Comets,Ashby Playing Fields,Pitch 3,3,3
+10/10/2026,09:00,Division 1,Ashby Lions Blacks,Dunmore Dynamos Tigers,Ashby Playing Fields,Pitch 4,6,1
+10/10/2026,10:00,Division 1,Padley Park Hawks,Netherfield Athletic Tigers,Ashby Playing Fields,Pitch 1,1,1
+10/10/2026,10:00,Division 1,Ashby Lions Whites,Ravenhill Rangers Stars,Ashby Playing Fields,Pitch 2,6,1
+10/10/2026,10:00,Division 1,Oakford Colts Reds,Kingsley Juniors Reds,Ashby Playing Fields,Pitch 3,0,0
+10/10/2026,10:00,Division 1,Ivybrook Blues,Westcombe Wanderers Greens,Ashby Playing Fields,Pitch 4,1,2
+05/09/2026,09:00,Division 2,Ravenhill Rangers Comets,Brindley Youth Tigers,Ashby Playing Fields,Pitch 1,2,2
+05/09/2026,09:00,Division 2,Stonebridge United Blues,Hartwell Rovers Greens,Ashby Playing Fields,Pitch 2,4,0
+05/09/2026,09:00,Division 2,Stonebridge United Reds,Sedgemoor Saints Stars,Ashby Playing Fields,Pitch 3,3,1
+05/09/2026,09:00,Division 2,Quenby Colts Tigers,Ferncliffe Eagles,Ashby Playing Fields,Pitch 4,2,1
+05/09/2026,10:00,Division 2,Lynford Youth Blacks,Caldicott Cubs Blacks,Ashby Playing Fields,Pitch 1,0,2
+05/09/2026,10:00,Division 2,Lynford Youth Whites,Norcott Town Golds,Ashby Playing Fields,Pitch 2,2,3
+05/09/2026,10:00,Division 2,Redmoor Eagles,Fenwick Falcons Eagles,Ashby Playing Fields,Pitch 3,2,4
+05/09/2026,10:00,Division 2,Netherfield Athletic Lions,Redmoor Hawks,Ashby Playing Fields,Pitch 4,2,2
+12/09/2026,09:00,Division 2,Hartwell Rovers Greens,Ravenhill Rangers Comets,Oakford Leisure Centre,Pitch 1,0,9
+12/09/2026,09:00,Division 2,Sedgemoor Saints Stars,Brindley Youth Tigers,Oakford Leisure Centre,Pitch 2,3,2
+12/09/2026,09:00,Division 2,Ferncliffe Eagles,Stonebridge United Blues,Oakford Leisure Centre,Pitch 3,3,3
+12/09/2026,09:00,Division 2,Caldicott Cubs Blacks,Stonebridge United Reds,Oakford Leisure Centre,Pitch 4,2,2
+12/09/2026,10:00,Division 2,Norcott Town Golds,Quenby Colts Tigers,Oakford Leisure Centre,Pitch 1,1,6
+12/09/2026,10:00,Division 2,Fenwick Falcons Eagles,Lynford Youth Blacks,Oakford Leisure Centre,Pitch 2,1,1
+12/09/2026,10:00,Division 2,Redmoor Hawks,Lynford Youth Whites,Oakford Leisure Centre,Pitch 3,3,2
+12/09/2026,10:00,Division 2,Netherfield Athletic Lions,Redmoor Eagles,Oakford Leisure Centre,Pitch 4,3,2
+19/09/2026,09:00,Division 2,Ravenhill Rangers Comets,Sedgemoor Saints Stars,Ashby Playing Fields,Pitch 1,6,0
+19/09/2026,09:00,Division 2,Hartwell Rovers Greens,Ferncliffe Eagles,Ashby Playing Fields,Pitch 2,5,3
+19/09/2026,09:00,Division 2,Brindley Youth Tigers,Caldicott Cubs Blacks,Ashby Playing Fields,Pitch 3,0,2
+19/09/2026,09:00,Division 2,Stonebridge United Blues,Norcott Town Golds,Ashby Playing Fields,Pitch 4,3,0
+19/09/2026,10:00,Division 2,Stonebridge United Reds,Fenwick Falcons Eagles,Ashby Playing Fields,Pitch 1,3,1
+19/09/2026,10:00,Division 2,Quenby Colts Tigers,Redmoor Hawks,Ashby Playing Fields,Pitch 2,1,2
+19/09/2026,10:00,Division 2,Lynford Youth Blacks,Netherfield Athletic Lions,Ashby Playing Fields,Pitch 3,2,4
+19/09/2026,10:00,Division 2,Lynford Youth Whites,Redmoor Eagles,Ashby Playing Fields,Pitch 4,3,4
+26/09/2026,09:00,Division 2,Ferncliffe Eagles,Ravenhill Rangers Comets,Oakford Leisure Centre,Pitch 1,0,1
+26/09/2026,09:00,Division 2,Caldicott Cubs Blacks,Sedgemoor Saints Stars,Oakford Leisure Centre,Pitch 2,4,0
+26/09/2026,09:00,Division 2,Norcott Town Golds,Hartwell Rovers Greens,Oakford Leisure Centre,Pitch 3,5,0
+26/09/2026,09:00,Division 2,Fenwick Falcons Eagles,Brindley Youth Tigers,Oakford Leisure Centre,Pitch 4,5,0
+26/09/2026,10:00,Division 2,Redmoor Hawks,Stonebridge United Blues,Oakford Leisure Centre,Pitch 1,1,7
+26/09/2026,10:00,Division 2,Netherfield Athletic Lions,Stonebridge United Reds,Oakford Leisure Centre,Pitch 2,0,1
+26/09/2026,10:00,Division 2,Redmoor Eagles,Quenby Colts Tigers,Oakford Leisure Centre,Pitch 3,1,1
+26/09/2026,10:00,Division 2,Lynford Youth Whites,Lynford Youth Blacks,Oakford Leisure Centre,Pitch 4,2,1
+03/10/2026,09:00,Division 2,Ravenhill Rangers Comets,Caldicott Cubs Blacks,Ashby Playing Fields,Pitch 1,4,1
+03/10/2026,09:00,Division 2,Ferncliffe Eagles,Norcott Town Golds,Ashby Playing Fields,Pitch 2,2,4
+03/10/2026,09:00,Division 2,Sedgemoor Saints Stars,Fenwick Falcons Eagles,Ashby Playing Fields,Pitch 3,1,1
+03/10/2026,09:00,Division 2,Hartwell Rovers Greens,Redmoor Hawks,Ashby Playing Fields,Pitch 4,1,3
+03/10/2026,10:00,Division 2,Brindley Youth Tigers,Netherfield Athletic Lions,Ashby Playing Fields,Pitch 1,4,2
+03/10/2026,10:00,Division 2,Stonebridge United Blues,Redmoor Eagles,Ashby Playing Fields,Pitch 2,2,2
+03/10/2026,10:00,Division 2,Stonebridge United Reds,Lynford Youth Whites,Ashby Playing Fields,Pitch 3,1,2
+03/10/2026,10:00,Division 2,Quenby Colts Tigers,Lynford Youth Blacks,Ashby Playing Fields,Pitch 4,3,0
+10/10/2026,09:00,Division 2,Norcott Town Golds,Ravenhill Rangers Comets,Oakford Leisure Centre,Pitch 1,1,4
+10/10/2026,09:00,Division 2,Fenwick Falcons Eagles,Caldicott Cubs Blacks,Oakford Leisure Centre,Pitch 2,6,5
+10/10/2026,09:00,Division 2,Redmoor Hawks,Ferncliffe Eagles,Oakford Leisure Centre,Pitch 3,0,1
+10/10/2026,09:00,Division 2,Netherfield Athletic Lions,Sedgemoor Saints Stars,Oakford Leisure Centre,Pitch 4,5,4
+10/10/2026,10:00,Division 2,Redmoor Eagles,Hartwell Rovers Greens,Oakford Leisure Centre,Pitch 1,3,1
+10/10/2026,10:00,Division 2,Lynford Youth Whites,Brindley Youth Tigers,Oakford Leisure Centre,Pitch 2,0,4
+10/10/2026,10:00,Division 2,Lynford Youth Blacks,Stonebridge United Blues,Oakford Leisure Centre,Pitch 3,4,4
+10/10/2026,10:00,Division 2,Quenby Colts Tigers,Stonebridge United Reds,Oakford Leisure Centre,Pitch 4,2,1
+05/09/2026,09:00,Division 3,Fenwick Falcons Hawks,Hartwell Rovers Golds,Oakford Leisure Centre,Pitch 1,4,1
+05/09/2026,09:00,Division 3,Marlfield Green Golds,Brindley Youth Lions,Oakford Leisure Centre,Pitch 2,7,0
+05/09/2026,09:00,Division 3,Marlfield Green Greens,Oakford Colts Blues,Oakford Leisure Centre,Pitch 3,1,0
+05/09/2026,09:00,Division 3,Ivybrook Reds,Ferncliffe Hawks,Oakford Leisure Centre,Pitch 4,6,2
+05/09/2026,10:00,Division 3,Padley Park Eagles,Sedgemoor Saints Comets,Oakford Leisure Centre,Pitch 1,2,0
+05/09/2026,10:00,Division 3,Hazelwood Hornets Stars,Silverbeck Comets,Oakford Leisure Centre,Pitch 2,4,2
+05/09/2026,10:00,Division 3,Dunmore Dynamos Lions,Silverbeck Stars,Oakford Leisure Centre,Pitch 3,2,2
+05/09/2026,10:00,Division 3,Quenby Colts Lions,Norcott Town Greens,Oakford Leisure Centre,Pitch 4,5,1
+12/09/2026,09:00,Division 3,Brindley Youth Lions,Fenwick Falcons Hawks,Ashby Playing Fields,Pitch 1,1,1
+12/09/2026,09:00,Division 3,Oakford Colts Blues,Hartwell Rovers Golds,Ashby Playing Fields,Pitch 2,2,1
+12/09/2026,09:00,Division 3,Ferncliffe Hawks,Marlfield Green Golds,Ashby Playing Fields,Pitch 3,1,4
+12/09/2026,09:00,Division 3,Sedgemoor Saints Comets,Marlfield Green Greens,Ashby Playing Fields,Pitch 4,3,2
+12/09/2026,10:00,Division 3,Silverbeck Comets,Ivybrook Reds,Ashby Playing Fields,Pitch 1,2,7
+12/09/2026,10:00,Division 3,Silverbeck Stars,Padley Park Eagles,Ashby Playing Fields,Pitch 2,0,3
+12/09/2026,10:00,Division 3,Norcott Town Greens,Hazelwood Hornets Stars,Ashby Playing Fields,Pitch 3,0,4
+12/09/2026,10:00,Division 3,Quenby Colts Lions,Dunmore Dynamos Lions,Ashby Playing Fields,Pitch 4,4,2
+19/09/2026,09:00,Division 3,Fenwick Falcons Hawks,Oakford Colts Blues,Oakford Leisure Centre,Pitch 1,6,0
+19/09/2026,09:00,Division 3,Brindley Youth Lions,Ferncliffe Hawks,Oakford Leisure Centre,Pitch 2,1,2
+19/09/2026,09:00,Division 3,Hartwell Rovers Golds,Sedgemoor Saints Comets,Oakford Leisure Centre,Pitch 3,3,2
+19/09/2026,09:00,Division 3,Marlfield Green Golds,Silverbeck Comets,Oakford Leisure Centre,Pitch 4,1,2
+19/09/2026,10:00,Division 3,Marlfield Green Greens,Silverbeck Stars,Oakford Leisure Centre,Pitch 1,5,1
+19/09/2026,10:00,Division 3,Ivybrook Reds,Norcott Town Greens,Oakford Leisure Centre,Pitch 2,8,3
+19/09/2026,10:00,Division 3,Padley Park Eagles,Quenby Colts Lions,Oakford Leisure Centre,Pitch 3,2,2
+19/09/2026,10:00,Division 3,Hazelwood Hornets Stars,Dunmore Dynamos Lions,Oakford Leisure Centre,Pitch 4,2,2
+26/09/2026,09:00,Division 3,Ferncliffe Hawks,Fenwick Falcons Hawks,Ashby Playing Fields,Pitch 1,2,2
+26/09/2026,09:00,Division 3,Sedgemoor Saints Comets,Oakford Colts Blues,Ashby Playing Fields,Pitch 2,0,3
+26/09/2026,09:00,Division 3,Silverbeck Comets,Brindley Youth Lions,Ashby Playing Fields,Pitch 3,1,0
+26/09/2026,09:00,Division 3,Silverbeck Stars,Hartwell Rovers Golds,Ashby Playing Fields,Pitch 4,2,2
+26/09/2026,10:00,Division 3,Norcott Town Greens,Marlfield Green Golds,Ashby Playing Fields,Pitch 1,2,4
+26/09/2026,10:00,Division 3,Quenby Colts Lions,Marlfield Green Greens,Ashby Playing Fields,Pitch 2,2,3
+26/09/2026,10:00,Division 3,Dunmore Dynamos Lions,Ivybrook Reds,Ashby Playing Fields,Pitch 3,2,2
+26/09/2026,10:00,Division 3,Hazelwood Hornets Stars,Padley Park Eagles,Ashby Playing Fields,Pitch 4,3,7
+03/10/2026,09:00,Division 3,Fenwick Falcons Hawks,Sedgemoor Saints Comets,Oakford Leisure Centre,Pitch 1,3,1
+03/10/2026,09:00,Division 3,Ferncliffe Hawks,Silverbeck Comets,Oakford Leisure Centre,Pitch 2,1,3
+03/10/2026,09:00,Division 3,Oakford Colts Blues,Silverbeck Stars,Oakford Leisure Centre,Pitch 3,4,3
+03/10/2026,09:00,Division 3,Brindley Youth Lions,Norcott Town Greens,Oakford Leisure Centre,Pitch 4,3,0
+03/10/2026,10:00,Division 3,Hartwell Rovers Golds,Quenby Colts Lions,Oakford Leisure Centre,Pitch 1,1,5
+03/10/2026,10:00,Division 3,Marlfield Green Golds,Dunmore Dynamos Lions,Oakford Leisure Centre,Pitch 2,1,0
+03/10/2026,10:00,Division 3,Marlfield Green Greens,Hazelwood Hornets Stars,Oakford Leisure Centre,Pitch 3,4,2
+03/10/2026,10:00,Division 3,Ivybrook Reds,Padley Park Eagles,Oakford Leisure Centre,Pitch 4,1,0
+10/10/2026,09:00,Division 3,Silverbeck Comets,Fenwick Falcons Hawks,Ashby Playing Fields,Pitch 1,2,3
+10/10/2026,09:00,Division 3,Silverbeck Stars,Sedgemoor Saints Comets,Ashby Playing Fields,Pitch 2,0,3
+10/10/2026,09:00,Division 3,Norcott Town Greens,Ferncliffe Hawks,Ashby Playing Fields,Pitch 3,4,5
+10/10/2026,09:00,Division 3,Quenby Colts Lions,Oakford Colts Blues,Ashby Playing Fields,Pitch 4,5,1
+10/10/2026,10:00,Division 3,Dunmore Dynamos Lions,Brindley Youth Lions,Ashby Playing Fields,Pitch 1,3,1
+10/10/2026,10:00,Division 3,Hazelwood Hornets Stars,Hartwell Rovers Golds,Ashby Playing Fields,Pitch 2,4,2
+10/10/2026,10:00,Division 3,Padley Park Eagles,Marlfield Green Golds,Ashby Playing Fields,Pitch 3,4,5
+10/10/2026,10:00,Division 3,Ivybrook Reds,Marlfield Green Greens,Ashby Playing Fields,Pitch 4,1,4

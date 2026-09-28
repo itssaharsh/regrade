@@ -1,0 +1,37 @@
+{
+  "model": "gemini-3.6-flash",
+  "date": "2026-09-28T14:04:56.303Z",
+  "ms": 148744,
+  "usage": {
+    "inputTokens": 6791,
+    "inputTokenDetails": {
+      "noCacheTokens": 6791,
+      "cacheReadTokens": 0
+    },
+    "outputTokens": 36800,
+    "outputTokenDetails": {
+      "textTokens": 4013,
+      "reasoningTokens": 32787
+    },
+    "totalTokens": 43591
+  },
+  "tools": "none (one prompt)",
+  "recount": {
+    "rows": 96,
+    "expected": 96,
+    "clashes": 0,
+    "teamTwice": 0,
+    "offSetup": 0,
+    "repeats": 0,
+    "maxGap": 0,
+    "unknownTeams": [],
+    "badRows": 0,
+    "dates": [
+      "07/11/2026",
+      "14/11/2026",
+      "24/10/2026",
+      "31/10/2026"
+    ],
+    "teamSaturdays": 192
+  }
+}

@@ -31,6 +31,9 @@ Volunteer fixture secretaries of mini-soccer leagues in England re-grade teams b
 | Innovation/Idea: "does the project differ from existing concepts?" | re-banding from results plus regenerating only the next block, absent from Full-Time's guide and the generators surveyed (LeagueRepublic, LeagueLobster, fixturelist, open-source schedulers) |
 | Presentation: "the video clearly demonstrate the project working end-to-end" | the video (link in the submission) runs the whole loop on the live site: bands, Generate, a secretary's move and Regenerate, the week plan with its byes, the export, and a pitch shortfall |
 
+## Compared with a general model
+Could a secretary paste the results into a chatbot instead? We tried it once (`scripts/assistant-baseline.ts`, prompt and answer in `evals/baseline/`): Gemini 3.6 Flash, one prompt, no tools, given the sample's 144 results and the same pitch slots. In 149 s it returned a valid four-week block: 96 fixtures, 0 clashes, 0 repeat pairings, home/away gap 0, checked by the same recount `npm run validate` applies. Its divisions, though, place 24 of 48 teams away from their true strength, the same as the league's own guess; Regrade's place 16, because results only come from games inside a division and Regrade accounts for that. Regrade also answers in under a second, gives the same answer every time, and keeps going where a pasted answer stops: moving a team and regenerating, a short Saturday, the uploader file and each club's list. One run on one sample; a stronger model or a different prompt may do better.
+
 ## What's real and what's synthetic
 | Part | Status |
 |---|---|
