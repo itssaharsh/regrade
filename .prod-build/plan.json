@@ -407,7 +407,9 @@
         "observe: baseline run recorded with clashes, repeats, gap and missing fixtures"
       ],
       "rollback": "n/a",
-      "status": "todo"
+      "status": "doing",
+      "base": "8049292",
+      "started_after": 126
     },
     {
       "id": "T12",

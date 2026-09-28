@@ -64,6 +64,7 @@ Decisions: [docs/adr](docs/adr). Design: [UI-SPEC.md](UI-SPEC.md).
 ## Limitations
 - The uploader layout is from a 2015 guide; a league admin should confirm it is current.
 - Results must be pasted (as a table, or as text for the reading step); no league-level export from Full-Time was found. The reading step sends the text to Google Gemini; on a free-tier key Google may use it to improve its products.
+- The reading step runs on a free-tier Gemini key. Flash models often answer "high demand" (HTTP 503) and the newest has 20 requests a day, so the function tries four models in two rounds (Gemini 3.1 Flash-Lite first, which read the sample message 23 of 23) and the page retries twice before saying Gemini is busy. The table path never depends on it.
 - One age group and three bands per workspace; mini-soccer central venues in England.
 - Each exported division, venue and pitch name must already exist in Full-Time exactly as written; the export uses the names in your results file and your slot setup, and pitches are named Pitch 1, Pitch 2 and so on.
 - The 2-goals-a-game gap between divisions is a fixed assumption taken from one league's target spread; a league whose divisions are closer or further apart would want a different figure.
