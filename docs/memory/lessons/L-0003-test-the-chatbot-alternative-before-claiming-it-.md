@@ -7,12 +7,12 @@ scope: global-candidate
 components: scripts/assistant-baseline.ts, README.md
 triggers: baseline, chatbot, general model, absorption, wrapper test, differentiation, claim
 evidence: scripts/assistant-baseline.ts, scripts/recount.ts, README.md
-verified_at: 2026-09-28@0f01848
+verified_at: 2026-09-28@d785851
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: c7e1f1d1bc2cbc6a
+cite_hash: 8d1881e97bd907f3
 created: 2026-09-28
 source: unknown
 ---
