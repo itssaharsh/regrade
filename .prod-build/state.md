@@ -1,13 +1,16 @@
-# State — regrade (hackathon, direct) — 2026-09-27
+# State — regrade (hackathon, direct) — 2026-09-28
 
-Deadline: 2026-10-26 17:00 EDT (2026-10-27 02:30 IST). Live: https://itssaharsh.github.io/regrade/ (Pages via Actions, gated on typecheck, test and validate).
+Deadline: 2026-10-26 17:00 EDT (2026-10-27 02:30 IST). Live: https://regrade-app.vercel.app (Vercel, CLI deploys, project lack-toes/regrade); the old Pages URL redirects. CI runs typecheck, tests, validate and build on every push.
 
 ## Done
 - T01 vertical slice; T02 review (53 findings, triaged in reports/review.md); T03 fixes; T04 live demo flow ×3.
 - T05 video (E0064), re-recorded after the final reviews from the final live site: ../regrade-demo/demo/build/final.mp4.
 - T07 skipped (non-blocking font CSS made CLS worse, E0045). T08 self-hosted fonts (E0056).
 - T06: four final reviews (E0088, reports/final-reviews.md), fixes in 85cdbaf and e8c2ad6: division-aware banding (docs/adr/0004), block keeps its slots, stale download blocked, input hardening, scheduler search, CSV recount in validate, docs aligned; live: demo ×3 (E0078), Lighthouse desktop 100 / mobile 99, CLS 0 (E0086); DELIVERY.md passes `pb.py report`.
-- Memory: ADR-0001 to ADR-0003, F-0001 to F-0006, L-0001, L-0002; mem check clean.
+- T09 Vercel hosting (E0099); T10 read results written any way, Gemini with a 4-model fallback, live eval 6/6 (E0120, E0122); T11 assistant baseline: Gemini 3.6 Flash made a valid block from one prompt, its divisions misplace 24 vs Regrade's 16 (E0146); club fixture lists.
+- T12 video v3 in ../regrade-demo/v3 (kit copied to ../regrade-demo/kit3 with the F-0001 pump patch); recording needs Gemini to answer, so it runs behind an availability gate.
+- Memory: ADR-0001 to ADR-0003, F-0001 to F-0007, L-0001 to L-0003; mem check clean.
+- Gemini key: sensitive env var GOOGLE_GENERATIVE_AI_API_KEY in Vercel production only (free tier). Rotate after judging (it was pasted in chat).
 
 ## Left for the learner (not the agent's to do)
 - Upload final.mp4 unlisted to YouTube; put the link in README ("Video:") and Devpost.
