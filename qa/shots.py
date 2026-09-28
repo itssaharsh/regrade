@@ -32,6 +32,9 @@ with sync_playwright() as p:
     head = open(d.value.path()).readline().strip(); first = open(d.value.path()).readlines()[1]
     if head != 'Date,Time,Division,Home Team,Away Team,Venue,Pitch,Home Score,Away Score': fails.append('csv header ' + head)
     if ',Band ' in first: fails.append('csv still exports Band names: ' + first)
+    page.select_option('#club', 'Ashby Lions'); page.wait_for_timeout(150)
+    ct = page.locator('#club-text').inner_text()
+    if 'Ashby Lions Whites' not in ct or 'Ashby Lions Blacks' not in ct or ct.count('/2026') != 8: fails.append('club list for Ashby Lions wrong: ' + ct[:120])
     # focus survives a move
     page.focus('button[data-down="ivybrook-reds"]'); page.keyboard.press('Enter'); page.wait_for_timeout(200)
     focused = page.evaluate('document.activeElement && (document.activeElement.dataset.up || document.activeElement.dataset.down || document.activeElement.tagName)')

@@ -229,3 +229,6 @@ table.grid.empty td.cell{background:var(--surface-sunken)}
 .read-row.warn .note,.read-row .note.bad{color:var(--warning)}
 .read-row.held{opacity:.85;background:var(--surface-2)}
 .read-list{margin:4px 0 8px;padding-left:18px}
+.clubs{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.clubs h3{font-size:18px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.club-text{white-space:pre-wrap;font:12px/1.55 var(--ff-mono);background:var(--canvas);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;margin:8px 0 10px;max-height:260px;overflow:auto}

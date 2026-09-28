@@ -4,6 +4,7 @@ import { proposeBands, divisionLevels } from '../src/banding.ts'
 import { generateBlock } from '../src/scheduler.ts'
 import { toUploaderCsv, UPLOADER_COLUMNS } from '../src/export.ts'
 import { sampleResultsCsv, sampleSetup } from '../src/seed.ts'
+import { recountCsv } from './recount.ts'
 
 let failures = 0
 const check = (name: string, ok: boolean, detail = ''): void => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`); if (!ok) failures++ }
@@ -35,29 +36,13 @@ const csv = toUploaderCsv(block, name)
 const lines = csv.trim().split('\r\n')
 check('CSV header matches the FA uploader columns', lines[0] === UPLOADER_COLUMNS.join(','))
 check('every CSV row has 9 columns and a DD/MM/YYYY date', lines.slice(1).every(l => l.split(',').length === 9 && /^\d{2}\/\d{2}\/\d{4},/.test(l)))
-const idOf = new Map(parsed.teams.map(t => [t.name, t.id]))
-const setupSlots = new Set(setup.venues.flatMap(v => v.pitches.flatMap(p => setup.times.map(t => `${t}|${v.name}|${p}`))))
-const slotSeen = new Set<string>(), teamDay = new Set<string>(), pairSeen = new Set<string>()
-const home = new Map<string, number>(), away = new Map<string, number>()
-let clashes = 0, twice = 0, offSetup = 0, repeatsCsv = 0
-for (const [date, time, , h, a, venue, pitch] of lines.slice(1).map(l => l.split(','))) {
-  const slot = `${date}|${time}|${venue}|${pitch}`
-  if (slotSeen.has(slot)) clashes++
-  slotSeen.add(slot)
-  if (!setupSlots.has(`${time}|${venue}|${pitch}`)) offSetup++
-  for (const t of [h, a]) { if (teamDay.has(`${date}|${t}`)) twice++; teamDay.add(`${date}|${t}`) }
-  const [x, y] = [idOf.get(h)!, idOf.get(a)!].sort()
-  if (played.has(`${x}|${y}`) || pairSeen.has(`${x}|${y}`)) repeatsCsv++
-  pairSeen.add(`${x}|${y}`)
-  home.set(h, (home.get(h) ?? 0) + 1); away.set(a, (away.get(a) ?? 0) + 1)
-}
-const gap = Math.max(...parsed.teams.map(t => Math.abs((home.get(t.name) ?? 0) - (away.get(t.name) ?? 0))))
-check('0 pitch clashes (recounted from the exported CSV)', clashes === 0, `${clashes}`)
-check('every fixture is in a slot from the setup', offSetup === 0, `${offSetup} outside`)
-check('every team plays once per Saturday (recounted from the CSV)', twice === 0 && teamDay.size === 48 * 4, `${teamDay.size} team-Saturdays`)
-check('0 repeat pairings (recounted from the CSV against the results)', repeatsCsv === 0, `${repeatsCsv}`)
-check('home/away within 1 for every team (recounted from the CSV)', gap <= 1, `max gap ${gap}`)
-check('on-screen counters agree with the recount', block.counters.clashes === clashes && block.counters.repeats === repeatsCsv && block.counters.maxHomeAwayGap === gap)
+const rc = recountCsv(csv, parsed.teams, played, setup, 96)
+check('0 pitch clashes (recounted from the exported CSV)', rc.clashes === 0, `${rc.clashes}`)
+check('every fixture is in a slot from the setup', rc.offSetup === 0, `${rc.offSetup} outside`)
+check('every team plays once per Saturday (recounted from the CSV)', rc.teamTwice === 0 && rc.teamSaturdays === 48 * 4, `${rc.teamSaturdays} team-Saturdays`)
+check('0 repeat pairings (recounted from the CSV against the results)', rc.repeats === 0, `${rc.repeats}`)
+check('home/away within 1 for every team (recounted from the CSV)', rc.maxGap <= 1, `max gap ${rc.maxGap}`)
+check('on-screen counters agree with the recount', block.counters.clashes === rc.clashes && block.counters.repeats === rc.repeats && block.counters.maxHomeAwayGap === rc.maxGap)
 check('block dates are the four Saturdays from the first', new Set(block.fixtures.map(f => f.date)).size === 4 && block.fixtures.every(f => new Date(f.date).getUTCDay() === 6))
 
 const short = sampleSetup(); short.venues[1].pitches = short.venues[1].pitches.slice(0, 2)

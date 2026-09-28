@@ -175,3 +175,23 @@ describe('division levels (results only come from games inside a division)', () 
     expect(bandScore(st(3), 1)).toBeGreaterThan(bandScore(st(0.5), 0))
   })
 })
+
+describe('club fixture lists (evidence E23: clubs need their own teams\' fixtures)', () => {
+  it('give every team one line per Saturday, a fixture or a bye, matching the block', async () => {
+    const { clubLines, clubText } = await import('../src/export.ts')
+    const { moveTeam } = await import('../src/banding.ts')
+    const parsed = parseResults(sampleResultsCsv().csv)
+    const stats = computeStats(parsed.results, parsed.teams)
+    let bands = proposeBands([...stats.values()], 3)
+    bands = moveTeam(bands, bands[0].teamIds[0], bands[1].id) // 15/17/16: two odd bands, so byes appear
+    const setup = sampleSetup()
+    const block = generateBlock(bands, stats, playedPairs(parsed.results), parsed.teams, setup)
+    const sats = [0, 1, 2, 3].map(w => { const d = new Date(setup.firstSaturday + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 7 * w); return d.toISOString().slice(0, 10) })
+    const lines = clubLines(block, parsed.teams, sats)
+    expect(lines).toHaveLength(48 * 4)
+    expect(lines.filter(l => l.side === 'Bye')).toHaveLength(block.byes.length)
+    expect(lines.filter(l => l.side === 'Home')).toHaveLength(block.fixtures.length)
+    const text = clubText('Oakford Colts', lines)
+    expect(text).toMatch(/Oakford Colts Reds/); expect(text).toMatch(/Oakford Colts Blues/)
+  })
+})

@@ -1,7 +1,7 @@
 import { parseResults, computeStats, playedPairs, recordedDivisions, slug, FORMULA_START, type Parsed, type ParseError } from './results.ts'
 import { proposeBands, moveTeam, bandSpread, bandScore, movedTeams, divisionNames, divisionLevels, DIVISION_GAP } from './banding.ts'
 import { generateBlock, slotsFor, saturday, parseTimes, shortfallAdvice } from './scheduler.ts'
-import { toUploaderCsv, UPLOADER_COLUMNS, fixtureRow } from './export.ts'
+import { toUploaderCsv, UPLOADER_COLUMNS, fixtureRow, clubLines, clubCsv, clubText } from './export.ts'
 import { sampleResultsCsv, sampleSetup, sampleMessage, SAMPLE_LEAGUE } from './seed.ts'
 import { checkInput, sourceLines, resolveName, completeDate, MAX_CHARS, type IntakeResult, type ReadRow } from './intake.ts'
 import type { Band, Block, Setup, TeamStats, Fixture } from './model.ts'
@@ -572,8 +572,10 @@ function renderExport(): void {
   ].join('')
   el.innerHTML = `<h2 id="export-h">Export</h2><p class="small muted">fixtureupload.csv in the Full-Time uploader's nine-column layout (FA guide v5.1), each band under its division name. Showing 8 of ${b.fixtures.length} rows.</p>${notes}
     <div class="csv" role="region" aria-label="CSV preview" tabindex="0"><table><thead><tr>${UPLOADER_COLUMNS.map(c => `<th scope="col">${c}</th>`).join('')}</tr></thead><tbody>${rows.map(f => `<tr>${fixtureRow(f, teamName).map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-    <div class="row"><button class="btn" type="button" id="download">Download fixtureupload.csv</button><button class="btn ghost" type="button" id="copy">Copy CSV</button></div>`
+    <div class="row"><button class="btn" type="button" id="download">Download fixtureupload.csv</button><button class="btn ghost" type="button" id="copy">Copy CSV</button></div>
+    ${clubPanel(b)}`
   const csv = toUploaderCsv(state.block, teamName)
+  wireClubPanel(b)
   if (state.stale) for (const id of ['#download', '#copy']) $(id).setAttribute('aria-disabled', 'true')
   const blocked = (): boolean => { if (state.stale) say('This file is from before your changes. Regenerate first.'); return state.stale }
   $('#download').addEventListener('click', () => {
@@ -587,6 +589,35 @@ function renderExport(): void {
     const c = $('#copy')
     try { await navigator.clipboard.writeText(csv); c.textContent = 'Copied'; say('CSV copied.') } catch { c.textContent = 'Copy failed, use Download'; say('Copy failed; use Download.') }
     setTimeout(() => { c.textContent = 'Copy CSV' }, 2000)
+  })
+}
+
+// ---------- club fixture lists: after the upload, each club needs its own teams' Saturdays (evidence E23 in the research)
+let clubPick = ''
+function clubPanel(b: Block): string {
+  const lines = clubLines(b, state.parsed.teams, Array.from({ length: b.setup.weeks }, (_, w) => saturday(b.setup.firstSaturday, w)))
+  const clubs = [...new Set(lines.map(l => l.club))]
+  if (!clubs.includes(clubPick)) clubPick = clubs[0] ?? ''
+  return `<div class="clubs"><h3 id="clubs-h">Club fixture lists</h3>
+    <p class="small muted">Each club's teams, Saturday by Saturday, byes included, to paste into an email or a club chat.</p>
+    <div class="field"><label for="club">Club</label><select id="club">${clubs.map(c => `<option${c === clubPick ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+    <pre class="club-text" id="club-text" tabindex="0" aria-label="Fixtures for ${esc(clubPick)}">${esc(clubText(clubPick, lines))}</pre>
+    <div class="row"><button class="btn small" type="button" id="copy-club">Copy for ${esc(clubPick)}</button><button class="btn small ghost" type="button" id="dl-clubs">Download all clubs (CSV)</button></div></div>`
+}
+function wireClubPanel(b: Block): void {
+  const lines = clubLines(b, state.parsed.teams, Array.from({ length: b.setup.weeks }, (_, w) => saturday(b.setup.firstSaturday, w)))
+  if (state.stale) for (const id of ['#copy-club', '#dl-clubs']) $(id).setAttribute('aria-disabled', 'true')
+  ;($('#club') as HTMLSelectElement).addEventListener('change', e => { clubPick = (e.target as HTMLSelectElement).value; render(); $('#club').focus() })
+  $('#copy-club').addEventListener('click', async () => {
+    if (state.stale) { say('These lists are from before your changes. Regenerate first.'); return }
+    const c = $('#copy-club')
+    try { await navigator.clipboard.writeText(clubText(clubPick, lines)); c.textContent = 'Copied'; say(`Fixtures for ${clubPick} copied.`) } catch { c.textContent = 'Copy failed'; say('Copy failed; select the text instead.') }
+    setTimeout(() => { c.textContent = `Copy for ${clubPick}` }, 2000)
+  })
+  $('#dl-clubs').addEventListener('click', () => {
+    if (state.stale) { say('These lists are from before your changes. Regenerate first.'); return }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([clubCsv(lines)], { type: 'text/csv' })); a.download = 'club-fixtures.csv'; document.body.appendChild(a); a.click(); a.remove()
+    say('club-fixtures.csv downloaded.')
   })
 }
 

@@ -329,10 +329,17 @@
         "observe: the Vercel production URL returns the app with the security headers, and the Pages URL redirects"
       ],
       "rollback": "re-enable the Pages deploy workflow and revert vercel.json",
-      "status": "doing",
+      "status": "done",
       "notes": "static hosting was not what limited the UI; the reason to move is the server function in T10",
       "base": "93a3ae2",
-      "started_after": 92
+      "started_after": 92,
+      "evidence": [
+        "E0099",
+        "E0100",
+        "E0101",
+        "E0102",
+        "E0103"
+      ]
     },
     {
       "id": "T10",
@@ -366,7 +373,9 @@
         "observe: live intake of the golden messy results on the Vercel URL returns grounded rows and the review screen"
       ],
       "rollback": "AI_ENABLED=false in Vercel env (the button hides and the CSV path remains)",
-      "status": "todo"
+      "status": "doing",
+      "base": "1918fc8",
+      "started_after": 103
     },
     {
       "id": "T11",
