@@ -94,6 +94,7 @@ with sync_playwright() as p:
     page.click('#read-add'); page.wait_for_timeout(400)
     summary = page.locator('#import').inner_text()
     if '167 results' not in summary or 'read from text' not in summary: fails.append('add did not merge the results: ' + summary[:120])
+    if "sample's grounds" in page.locator('#slots').inner_text(): fails.append('sample-grounds hint shown after adding a message to the sample league')
     if errs: fails.append('review page errors: ' + '; '.join(errs[:2]))
     ctx.close()
     # phone: generate reveals the grid

@@ -344,7 +344,7 @@ function renderSlots(): void {
   const n = slotsFor(s).length
   el.innerHTML = `<h2 id="slots-h">Pitch slots</h2>
     <p class="small muted"><b class="num">${n}</b> slots per Saturday across ${s.venues.length} venue${s.venues.length === 1 ? '' : 's'}.</p>
-    ${state.source === 'own' && JSON.stringify(s) === JSON.stringify(sampleSetup()) ? '<p class="small hint">These are the sample\'s grounds, times and date. Set your own before you generate: the export uses these venue names.</p>' : ''}
+    ${state.source === 'own' && !state.readNote.startsWith(SAMPLE_LEAGUE) && JSON.stringify(s) === JSON.stringify(sampleSetup()) ? '<p class="small hint">These are the sample\'s grounds, times and date. Set your own before you generate: the export uses these venue names.</p>' : ''}
     ${s.venues.map((v, vi) => `<div class="venue">
       <label class="sr-only" for="vname-${vi}">Venue ${vi + 1} name</label>
       <input class="vname" id="vname-${vi}" data-vname="${vi}" type="text" value="${esc(v.name)}" autocomplete="off">
