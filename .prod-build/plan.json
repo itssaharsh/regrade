@@ -442,7 +442,16 @@
         "observe: demo-kit qa.py passed and every contact sheet reviewed"
       ],
       "rollback": "keep the previous final.mp4 (build/final.v2.mp4)",
-      "status": "todo"
+      "status": "done",
+      "base": "49e37f7",
+      "started_after": 158,
+      "evidence": [
+        "E0159",
+        "E0160",
+        "E0161",
+        "E0162",
+        "E0163"
+      ]
     }
   ]
 }

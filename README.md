@@ -6,9 +6,9 @@ Built for Devpost's *Build With AI: Basics* hackathon with the Devpost Learn ski
 
 Live: https://regrade-app.vercel.app · Video: (link in the Devpost submission)
 
-| Generate four weeks | Move a team, rebuild | A short Saturday |
+| Read a coaches' message | Generate four weeks | A short Saturday |
 |---|---|---|
-| ![Generate fills both venues' pitch plans; the clashes, repeat pairings and home/away gap counters read 0](docs/media/generate.gif) | ![Stonebridge United Blues moves down a band, the block is marked changed, and Regenerate rebuilds all four weeks](docs/media/move.gif) | ![With two pitches removed at Ashby, the fixtures that don't fit are listed by name with the slots to add](docs/media/shortfall.gif) |
+| ![A fictional coaches' message is pasted and Read with AI turns it into 23 rows, each shown beside the line it came from](docs/media/read.gif) | ![Generate fills both venues' pitch plans; the clashes, repeat pairings and home/away gap counters read 0](docs/media/generate.gif) | ![With two pitches removed at Ashby, the fixtures that don't fit are listed by name with the slots to add](docs/media/shortfall.gif) |
 
 <sub>Clips from the demo video, recorded on the live site with the synthetic sample league.</sub>
 
