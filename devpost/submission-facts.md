@@ -2,7 +2,7 @@
 
 - Project working name: Regrade (choose your own name and tagline; the tagline should state the outcome, e.g. "re-band by results, refixture into your slots, export to Full-Time").
 - Repo: https://github.com/itssaharsh/regrade (public; MIT licence not yet added, add one if you want).
-- Live: https://itssaharsh.github.io/regrade/
+- Live: https://regrade-app.vercel.app (the old GitHub Pages address redirects there)
 - Video: upload ../regrade-demo/demo/build/final.mp4 (outside this repo) to YouTube (unlisted is fine) and paste the link; the file is under three minutes.
 - Built with (Devpost tags): TypeScript, Vite, Vitest, HTML, CSS, GitHub Pages, GitHub Actions, Devpost Learn skill pack.
 - Planning documents required by the rules: devpost/scope.md, devpost/prd.md, devpost/spec.md (plus checklist.md and app-map.html), all in the repo.

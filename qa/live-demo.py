@@ -1,7 +1,7 @@
 # T04: the demo flow three times on the live URL, fresh context each run, reset shortcut exercised between runs.
 import sys
 from playwright.sync_api import sync_playwright
-URL = sys.argv[1] if len(sys.argv) > 1 else 'https://itssaharsh.github.io/regrade/'
+URL = sys.argv[1] if len(sys.argv) > 1 else 'https://regrade-app.vercel.app/'
 fails = []
 with sync_playwright() as p:
     b = p.chromium.launch()

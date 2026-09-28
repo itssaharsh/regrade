@@ -20,5 +20,10 @@
   },
   "engines": {
     "node": ">=22.6"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^4.0.82",
+    "ai": "^7.0.118",
+    "zod": "^4.6.5"
   }
 }

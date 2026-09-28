@@ -4,7 +4,7 @@
 
 Built for Devpost's *Build With AI: Basics* hackathon with the Devpost Learn skill pack. Planning documents: [devpost/scope.md](devpost/scope.md), [devpost/prd.md](devpost/prd.md), [devpost/spec.md](devpost/spec.md), [devpost/checklist.md](devpost/checklist.md).
 
-Live: https://itssaharsh.github.io/regrade/ · Video: (link in the Devpost submission)
+Live: https://regrade-app.vercel.app · Video: (link in the Devpost submission)
 
 | Generate four weeks | Move a team, rebuild | A short Saturday |
 |---|---|---|
@@ -36,7 +36,7 @@ Volunteer fixture secretaries of mini-soccer leagues in England re-grade teams b
 | Results parsing, banding, scheduler, CSV export | real, deterministic, tested |
 | Sample league (Oakford & District Youth League, U9) | synthetic: 24 fictional clubs, 48 teams, six Saturdays of generated results, labelled on screen |
 | Uploader column layout | from the FA's 2015 guide (v5.1); confirm against your league's uploader before use |
-| Deployment | GitHub Pages; needs no network after the page loads (no service worker, so a reload needs a connection) |
+| Deployment | Vercel (static page plus one function, `api/read-results`); the old GitHub Pages address redirects. Scheduling needs no network after the page loads (no service worker, so a reload needs a connection) |
 
 ## Quickstart
 Node 22.6 or later (the validate script uses Node's TypeScript type stripping).

@@ -215,3 +215,17 @@ table.grid.empty td.cell{background:var(--surface-sunken)}
 .hint,.export .warn{color:var(--warning)}
 .btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
 .field select{font:inherit;height:32px;border:1px solid var(--line-input);border-radius:var(--r-sm);padding:0 8px;background:var(--canvas);color:var(--ink);min-width:0;flex:0 1 180px}
+/* reading results written any way */
+.linkish{border:0;background:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.reading{color:var(--ink);margin:8px 0 0}
+.review-h{font-size:18px;text-transform:uppercase;letter-spacing:.04em;margin:6px 0 2px;outline:none}
+.read-rows{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:360px;overflow:auto}
+.read-row{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;row-gap:2px;padding:6px 8px;border-radius:var(--r-sm);background:var(--canvas);font-size:13px}
+.read-row .ln{grid-row:1 / span 3;color:var(--ink-muted);font-size:12px;padding-top:1px}
+.read-row .res b{font-weight:600}
+.read-row .score{padding:0 4px}
+.read-row .src{grid-column:2;font:12px/1.4 var(--ff-mono);color:var(--ink-muted);quotes:"“" "”";overflow-wrap:anywhere}
+.read-row .note{grid-column:2;font-size:12px;color:var(--ink-muted)}
+.read-row.warn .note,.read-row .note.bad{color:var(--warning)}
+.read-row.held{opacity:.85;background:var(--surface-2)}
+.read-list{margin:4px 0 8px;padding-left:18px}

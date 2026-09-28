@@ -302,6 +302,122 @@
         "E0060",
         "E0061"
       ]
+    },
+    {
+      "id": "T09",
+      "title": "Host on Vercel with security and cache headers",
+      "objective": "Move production to Vercel so a server function can exist; add security headers and immutable caching for hashed assets; keep the old Pages URL working as a redirect",
+      "role": "devops",
+      "size": "S",
+      "deps": [
+        "T06"
+      ],
+      "writes": [
+        "vercel.json",
+        "vite.config.ts",
+        "public/404.html",
+        ".github/workflows/**",
+        "README.md"
+      ],
+      "acceptance": [
+        "production URL on Vercel serves the app with CSP, nosniff and referrer headers",
+        "hashed assets cached immutable",
+        "the Pages URL redirects to Vercel"
+      ],
+      "verify": [
+        "npm run build",
+        "observe: the Vercel production URL returns the app with the security headers, and the Pages URL redirects"
+      ],
+      "rollback": "re-enable the Pages deploy workflow and revert vercel.json",
+      "status": "doing",
+      "notes": "static hosting was not what limited the UI; the reason to move is the server function in T10",
+      "base": "93a3ae2",
+      "started_after": 92
+    },
+    {
+      "id": "T10",
+      "title": "Read results in any form (AI intake with grounding and review)",
+      "objective": "Paste results as free text; one structured-output model call turns lines into rows, each citing its source line; code checks every row against its line; the deterministic parser validates; the secretary reviews and loads",
+      "role": "ai",
+      "size": "M",
+      "deps": [
+        "T09"
+      ],
+      "writes": [
+        "api/**",
+        "src/intake.ts",
+        "src/main.ts",
+        "src/style.css",
+        "tests/**",
+        "evals/**",
+        "package.json"
+      ],
+      "acceptance": [
+        "rows that don't match their quoted line are dropped and listed",
+        "nothing loads without the review step",
+        "with the function unavailable the CSV path still works and the UI says so",
+        "input capped, output capped, timeout, per-instance rate limit"
+      ],
+      "verify": [
+        "npm run typecheck",
+        "npm test",
+        "npm run validate",
+        "npm run build",
+        "observe: live intake of the golden messy results on the Vercel URL returns grounded rows and the review screen"
+      ],
+      "rollback": "AI_ENABLED=false in Vercel env (the button hides and the CSV path remains)",
+      "status": "todo"
+    },
+    {
+      "id": "T11",
+      "title": "Assistant baseline: the same job given to a general model",
+      "objective": "Measure whether pasting the sample results and slots into a strong general model gets a usable block, by recounting its CSV with the validate rules",
+      "role": "eval",
+      "size": "S",
+      "deps": [
+        "T09"
+      ],
+      "writes": [
+        "scripts/assistant-baseline.ts",
+        "evals/**",
+        "README.md"
+      ],
+      "acceptance": [
+        "the exact prompt, model and raw output are saved",
+        "the recount is the same code as validate",
+        "the README states the result whatever it is"
+      ],
+      "verify": [
+        "observe: baseline run recorded with clashes, repeats, gap and missing fixtures"
+      ],
+      "rollback": "n/a",
+      "status": "todo"
+    },
+    {
+      "id": "T12",
+      "title": "Re-record the demo from the Vercel site with the intake scene",
+      "objective": "Video shows reading messy results, the review, the rest of the loop, and the new URL",
+      "role": "presentation",
+      "size": "S",
+      "deps": [
+        "T10",
+        "T11"
+      ],
+      "writes": [
+        "../regrade-demo/**",
+        "docs/media/**",
+        "README.md"
+      ],
+      "acceptance": [
+        "qa.py --asr passes with no frozen segments",
+        "every contact sheet reviewed",
+        "under 3 minutes"
+      ],
+      "verify": [
+        "observe: demo-kit qa.py passed and every contact sheet reviewed"
+      ],
+      "rollback": "keep the previous final.mp4 (build/final.v2.mp4)",
+      "status": "todo"
     }
   ]
 }

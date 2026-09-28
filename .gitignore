@@ -11,3 +11,5 @@ qa/*
 !qa/shots.py
 !qa/live-demo.py
 C:*
+.vercel
+.env*

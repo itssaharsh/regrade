@@ -1,4 +1,5 @@
 name: pages
+# production moved to Vercel (https://regrade-app.vercel.app); the old Pages URL now redirects there, keeping the query string
 on:
   push: { branches: [main] }
   workflow_dispatch:
@@ -11,16 +12,20 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run validate
-      - run: BASE_PATH=/regrade/ npm run build
+      - name: Build the redirect page
+        run: |
+          mkdir -p out
+          cat > out/index.html <<'HTML'
+          <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Regrade has moved</title><meta http-equiv="refresh" content="0; url=https://regrade-app.vercel.app/">
+          <link rel="canonical" href="https://regrade-app.vercel.app/">
+          <script>location.replace('https://regrade-app.vercel.app/' + location.search + location.hash)</script></head>
+          <body style="font:16px/1.5 system-ui,sans-serif;max-width:36rem;margin:15vh auto;padding:0 16px">
+          <p>Regrade has moved to <a href="https://regrade-app.vercel.app/">regrade-app.vercel.app</a>.</p></body></html>
+          HTML
+          cp out/index.html out/404.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
-        with: { path: dist }
+        with: { path: out }
       - id: deployment
         uses: actions/deploy-pages@v4

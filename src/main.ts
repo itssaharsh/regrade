@@ -1,8 +1,9 @@
-import { parseResults, computeStats, playedPairs, recordedDivisions, FORMULA_START, type Parsed, type ParseError } from './results.ts'
+import { parseResults, computeStats, playedPairs, recordedDivisions, slug, FORMULA_START, type Parsed, type ParseError } from './results.ts'
 import { proposeBands, moveTeam, bandSpread, bandScore, movedTeams, divisionNames, divisionLevels, DIVISION_GAP } from './banding.ts'
 import { generateBlock, slotsFor, saturday, parseTimes, shortfallAdvice } from './scheduler.ts'
 import { toUploaderCsv, UPLOADER_COLUMNS, fixtureRow } from './export.ts'
-import { sampleResultsCsv, sampleSetup, SAMPLE_LEAGUE } from './seed.ts'
+import { sampleResultsCsv, sampleSetup, sampleMessage, SAMPLE_LEAGUE } from './seed.ts'
+import { checkInput, sourceLines, resolveName, completeDate, MAX_CHARS, type IntakeResult, type ReadRow } from './intake.ts'
 import type { Band, Block, Setup, TeamStats, Fixture } from './model.ts'
 
 interface State {
@@ -29,6 +30,8 @@ interface State {
   proposedNames: Map<string, string>
   divisionOverride: Map<string, string>
   importNote: string
+  /** "+ 23 results read from a message", shown under the league name */
+  readNote: string
 }
 
 const $ = <T extends HTMLElement>(sel: string): T => document.querySelector(sel) as T
@@ -52,7 +55,7 @@ function fromText(text: string, source: 'sample' | 'own', setup?: Setup): State 
     source, resultsText: text, parsed, stats, played: playedPairs(parsed.results), recordedDivision: recorded, levelOf,
     bands, setup: setup ?? sampleSetup(), block: null, stale: false, week: 1,
     importOpen: false, importDraft: '', importErrors: parsed.errors, setupError: '', animate: false, dragId: null,
-    bandCount, proposedNames: divisionNames(bands, recorded), divisionOverride: new Map(), importNote: '',
+    bandCount, proposedNames: divisionNames(bands, recorded), divisionOverride: new Map(), importNote: '', readNote: '',
   }
 }
 
@@ -159,31 +162,162 @@ function render(): void {
   }
 }
 
+// ---------- reading results written any way (api/read-results.ts); code checks every row, the secretary confirms
+interface ResolvedRow { row: ReadRow; source: string; home: string; away: string; notes: string[]; problem: string }
+type Intake = { status: 'idle' } | { status: 'reading'; started: number; lines: number }
+  | { status: 'review'; result: IntakeResult; text: string; rows: ResolvedRow[]; replay?: string } | { status: 'error'; message: string }
+let intake: Intake = { status: 'idle' }
+let aiAvailable: boolean | null = null
+let readTimer = 0
+
+function checkAi(): void {
+  if (aiAvailable !== null) return
+  aiAvailable = false
+  fetch('api/read-results').then(r => r.ok ? r.json() : null).then(b => { aiAvailable = !!b?.enabled; if (state.importOpen && aiAvailable) render() }).catch(() => {})
+}
+
+const csvCell = (v: string): string => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
+const ddmmyyyy = (iso: string): string => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : iso)
+
+/** Resolve written names to known teams and let the ordinary parser judge each row against the results already loaded. */
+function resolveRead(result: IntakeResult, text: string, base: typeof state.parsed.results): ResolvedRow[] {
+  const known = state.parsed.teams.map(t => t.name)
+  const lines = sourceLines(text)
+  const year = Math.max(...base.map(r => Number(r.date.slice(0, 4))).filter(Boolean), new Date().getFullYear())
+  const out = result.rows.map(row => {
+    const h = resolveName(row.home, known), a = resolveName(row.away, known)
+    const notes: string[] = []
+    for (const [w, r] of [[row.home, h], [row.away, a]] as const) {
+      if (r.how === 'matched') notes.push(`"${w}" is ${r.name}`)
+      if (r.how === 'new') notes.push(`New team: "${w}" isn't in your results; check the spelling`)
+      if (r.how === 'ambiguous') notes.push(`"${w}" could be ${r.candidates!.join(' or ')}; write it in full`)
+    }
+    return { row: { ...row, date: completeDate(row.date, year) }, source: lines[row.line - 1] ?? '', home: h.name, away: a.name, notes, problem: h.how === 'ambiguous' || a.how === 'ambiguous' ? 'name is ambiguous' : '' }
+  })
+  // the combined file goes through parseResults, so duplicates, formulas and self-play are caught exactly as for a pasted table
+  const combined = readCsv(base, out)
+  const errs = parseResults(combined).errors
+  for (const e of errs) { const i = e.row - 2 - base.length; if (out[i] && !out[i].problem) out[i].problem = e.message.replace(/^Row \d+: /, '') }
+  return out
+}
+
+function readCsv(base: typeof state.parsed.results, rows: ResolvedRow[]): string {
+  const division = (name: string, written?: string): string => state.recordedDivision.get(slug(name)) || written || ''
+  const lines = ['Date,Division,Home Team,Away Team,Home Score,Away Score',
+    ...base.map(r => [ddmmyyyy(r.date), r.division, r.home, r.away, String(r.homeScore), String(r.awayScore)].map(csvCell).join(',')),
+    ...rows.map(r => [r.row.date ?? '', division(r.home, r.row.division), r.home, r.away, String(r.row.homeScore), String(r.row.awayScore)].map(csvCell).join(','))]
+  return lines.join('\n')
+}
+
+async function readWithAi(text: string): Promise<void> {
+  const problem = checkInput(text)
+  if (problem) { intake = { status: 'error', message: problem }; render(); return }
+  intake = { status: 'reading', started: Date.now(), lines: sourceLines(text).filter(l => l.trim()).length }
+  render()
+  window.clearInterval(readTimer)
+  readTimer = window.setInterval(() => {
+    const el = document.getElementById('read-elapsed')
+    if (el && intake.status === 'reading') el.textContent = `${((Date.now() - intake.started) / 1000).toFixed(0)} s`
+  }, 250)
+  try {
+    const res = await fetch('api/read-results', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) })
+    const body = await res.json().catch(() => null)
+    if (!res.ok || !body) {
+      intake = { status: 'error', message: body?.message ?? 'Reading with AI isn\'t available here. Paste a results table and use Load results.' }
+    } else {
+      const result = body as IntakeResult
+      intake = { status: 'review', result, text, rows: resolveRead(result, text, state.parsed.results) }
+    }
+  } catch {
+    intake = { status: 'error', message: 'Reading with AI isn\'t available here. Paste a results table and use Load results.' }
+  }
+  window.clearInterval(readTimer)
+  render()
+  if (intake.status === 'review') { $('#review-h').focus(); say(`${intake.rows.filter(r => !r.problem).length} results read. Review them, then add them.`) }
+  else if (intake.status === 'error') say(intake.message)
+}
+
+function applyRead(mode: 'add' | 'replace'): void {
+  if (intake.status !== 'review') return
+  const good = intake.rows.filter(r => !r.problem)
+  const base = mode === 'add' ? state.parsed.results : []
+  const wasSample = state.source === 'sample' && mode === 'add'
+  const next = fromText(readCsv(base, good), 'own', state.setup)
+  if (!next) { intake = { status: 'error', message: 'None of these rows could be used.' }; render(); return }
+  state = next
+  state.readNote = `${wasSample ? `${SAMPLE_LEAGUE}, ` : ''}+ ${good.length} result${good.length === 1 ? '' : 's'} read from text`
+  intake = { status: 'idle' }
+  render()
+  $('#own').focus()
+  say(`Added ${good.length} results. Bands re-proposed from ${state.parsed.results.length} results.`)
+}
+
+function renderReview(el: HTMLElement): void {
+  if (intake.status !== 'review') return
+  const { result, rows } = intake
+  const good = rows.filter(r => !r.problem), held = rows.filter(r => r.problem)
+  const used = new Set([...result.rows.map(r => r.line), ...result.rejected.map(r => r.row.line), ...result.skipped.map(s => s.line)])
+  const unread = sourceLines(intake.text).map((l, i) => ({ l, i: i + 1 })).filter(x => x.l.trim() && !used.has(x.i))
+  const item = (r: ResolvedRow): string => `<li class="read-row${r.problem ? ' held' : ''}${r.notes.some(n => n.startsWith('New')) ? ' warn' : ''}">
+      <span class="ln num">line ${r.row.line}</span>
+      <span class="res"><b>${esc(r.home)}</b> <span class="num score">${r.row.homeScore}–${r.row.awayScore}</span> <b>${esc(r.away)}</b></span>
+      <q class="src">${esc(r.source.trim())}</q>
+      ${r.notes.map(n => `<span class="note">${esc(n)}</span>`).join('')}${r.problem ? `<span class="note bad">Not added: ${esc(r.problem)}</span>` : ''}</li>`
+  el.innerHTML = `<h2 id="import-h">Results</h2>
+    <h3 id="review-h" tabindex="-1" class="review-h">Read ${good.length} result${good.length === 1 ? '' : 's'} from ${sourceLines(intake.text).filter(l => l.trim()).length} lines</h3>
+    <p class="small muted">${intake.replay ? `${esc(intake.replay)}. ` : ''}${esc(result.model)} read the text in ${(result.ms / 1000).toFixed(1)} s. Every row below was checked against the line it came from; nothing is added until you confirm.</p>
+    <ol class="read-rows">${good.map(item).join('')}</ol>
+    ${held.length ? `<p class="small"><b>Held back (${held.length})</b></p><ol class="read-rows">${held.map(item).join('')}</ol>` : ''}
+    ${result.rejected.length ? `<p class="small"><b>Not used: not in the line they cite (${result.rejected.length})</b></p><ul class="small read-list">${result.rejected.map(x => `<li>line ${x.row.line}: ${esc(x.reason)}</li>`).join('')}</ul>` : ''}
+    ${result.skipped.length ? `<p class="small"><b>Skipped (${result.skipped.length})</b></p><ul class="small read-list">${result.skipped.map(x => `<li>line ${x.line}: ${esc(x.reason)}</li>`).join('')}</ul>` : ''}
+    ${unread.length ? `<details class="small"><summary>Lines not read as results (${unread.length})</summary><ul class="read-list">${unread.map(x => `<li>line ${x.i}: ${esc(x.l.trim())}</li>`).join('')}</ul></details>` : ''}
+    <div class="row"><button class="btn small primary" type="button" id="read-add"${good.length ? '' : ' aria-disabled="true"'}>Add ${good.length} result${good.length === 1 ? '' : 's'}</button><button class="btn small ghost" type="button" id="read-replace"${good.length ? '' : ' aria-disabled="true"'}>Use only these</button><button class="btn small ghost" type="button" id="read-back">Back to the text</button></div>
+    <p class="caption">Adding results re-proposes the bands from all results.</p>`
+  $('#read-add').addEventListener('click', () => { if (good.length) applyRead('add') })
+  $('#read-replace').addEventListener('click', () => { if (good.length) applyRead('replace') })
+  $('#read-back').addEventListener('click', () => { if (intake.status === 'review') state.importDraft = intake.text; intake = { status: 'idle' }; render(); $('#draft').focus() })
+}
+
 function renderImport(): void {
   const el = $('#import')
-  const summary = state.source === 'sample'
-    ? `${esc(SAMPLE_LEAGUE)}: ${state.parsed.results.length} results, ${state.parsed.teams.length} teams`
-    : `Your results: ${state.parsed.results.length} results, ${state.parsed.teams.length} teams`
+  const summary = state.readNote
+    ? `${esc(state.readNote)}: ${state.parsed.results.length} results, ${state.parsed.teams.length} teams`
+    : state.source === 'sample'
+      ? `${esc(SAMPLE_LEAGUE)}: ${state.parsed.results.length} results, ${state.parsed.teams.length} teams`
+      : `Your results: ${state.parsed.results.length} results, ${state.parsed.teams.length} teams`
   if (!state.importOpen) {
     el.innerHTML = `<h2 id="import-h">Results</h2><p class="small">${summary}</p>
-      <div class="row"><button class="btn small" type="button" id="own">Use your own results</button>${state.source === 'own' ? '<button class="btn small ghost" type="button" id="sample">Load sample results</button>' : ''}</div>`
-    $('#own').addEventListener('click', () => { state.importOpen = true; state.importDraft = state.source === 'own' ? state.resultsText : ''; state.importErrors = []; state.importNote = ''; render(); $('#draft').focus() })
+      <div class="row"><button class="btn small" type="button" id="own">Add or replace results</button>${state.source === 'own' ? '<button class="btn small ghost" type="button" id="sample">Load sample results</button>' : ''}</div>`
+    $('#own').addEventListener('click', () => { state.importOpen = true; state.importDraft = ''; state.importErrors = []; state.importNote = ''; intake = { status: 'idle' }; checkAi(); render(); $('#draft').focus() })
     document.querySelector('#sample')?.addEventListener('click', () => reset())
     return
   }
+  if (intake.status === 'review') { renderReview(el); return }
+  const reading = intake.status === 'reading'
+  const ai = aiAvailable === true
   el.innerHTML = `<h2 id="import-h">Results</h2>
-    <p class="small muted">Paste the block's results: the Full-Time uploader layout with scores filled in, or a simple table. Comma- or tab-separated (copied from a spreadsheet) both work.</p>
+    <p class="small muted">Paste a results table (the Full-Time uploader layout with scores, or Date, Home, Away and scores; comma- or tab-separated) and use <b>Load results</b>.${ai ? ' Or paste results written any way, like a message from coaches, and use <b>Read with AI</b>.' : ''}</p>
     <label class="sr-only" for="draft">Results</label>
-    <textarea id="draft" placeholder="Date,Time,Division,Home Team,Away Team,Venue,Pitch,Home Score,Away Score&#10;12/09/2026,09:00,Division 1,Oakford Colts Reds,Ashby Lions Blues,Oakford Leisure Centre,Pitch 1,3,1" aria-describedby="draft-help${state.importErrors.length ? ' draft-errors' : ''}"${state.importErrors.length ? ' aria-invalid="true"' : ''}>${esc(state.importDraft)}</textarea>
-    <p id="draft-help" class="caption">Dates as DD/MM/YYYY. Team names must match between rows. The Division column names the divisions your export will use.</p>
+    <textarea id="draft" maxlength="${MAX_CHARS}" placeholder="Date,Time,Division,Home Team,Away Team,Venue,Pitch,Home Score,Away Score&#10;12/09/2026,09:00,Division 1,Oakford Colts Reds,Ashby Lions Blues,Oakford Leisure Centre,Pitch 1,3,1" aria-describedby="draft-help${state.importErrors.length ? ' draft-errors' : ''}"${state.importErrors.length ? ' aria-invalid="true"' : ''}${reading ? ' readonly' : ''}>${esc(state.importDraft)}</textarea>
+    <p id="draft-help" class="caption">${ai ? `Read with AI sends the text to Google Gemini to read it; Regrade doesn't store it. <button type="button" class="linkish" id="sample-msg">Paste a sample message</button> (fictional).` : 'Dates as DD/MM/YYYY. Team names must match between rows. The Division column names the divisions your export will use.'}</p>
+    ${intake.status === 'reading' ? `<p class="small reading" role="status">Reading ${intake.lines} lines with Gemini… <span id="read-elapsed" class="num">0 s</span></p>` : ''}
+    ${intake.status === 'error' ? `<p class="reason" role="alert">${esc(intake.message)}</p>` : ''}
     ${state.importNote ? `<p class="small load-note">${esc(state.importNote)}</p>` : ''}
     ${state.importErrors.length ? `<div role="alert" id="draft-errors"><ul class="errors">${state.importErrors.slice(0, 6).map(e => `<li>${esc(e.message)}</li>`).join('')}${state.importErrors.length > 6 ? `<li>and ${state.importErrors.length - 6} more</li>` : ''}</ul></div>` : ''}
-    <div class="row"><button class="btn small" type="button" id="load">Load results</button><button class="btn small ghost" type="button" id="sample">Load sample results</button><button class="btn small ghost" type="button" id="cancel">Cancel</button></div>`
+    <div class="row"><button class="btn small" type="button" id="load"${reading ? ' aria-disabled="true"' : ''}>Load results</button>${ai ? `<button class="btn small primary" type="button" id="read"${reading ? ' aria-disabled="true"' : ''}>Read with AI</button>` : ''}<button class="btn small ghost" type="button" id="sample">Load sample results</button><button class="btn small ghost" type="button" id="cancel">Cancel</button></div>`
   const ta = $('#draft') as HTMLTextAreaElement
   ta.addEventListener('input', () => { state.importDraft = ta.value })
+  document.querySelector('#sample-msg')?.addEventListener('click', () => { state.importDraft = sampleMessage(); intake = { status: 'idle' }; render(); $('#draft').focus() })
+  document.querySelector('#read')?.addEventListener('click', () => { if (intake.status !== 'reading') void readWithAi(ta.value) })
   $('#load').addEventListener('click', () => {
+    if (reading) return
     const parsed = parseResults(ta.value)
-    if (parsed.results.length === 0) { state.importErrors = parsed.errors.length ? parsed.errors : [{ row: 0, message: 'No results found' }]; render(); $('#draft').focus(); return }
+    if (parsed.results.length === 0) {
+      state.importErrors = parsed.errors.length ? parsed.errors : [{ row: 0, message: 'No results found' }]
+      // text that isn't a table is what Read with AI is for
+      if (ai && parsed.errors[0]?.message.startsWith('Header')) state.importErrors = [{ row: 1, message: 'This isn\'t a results table. To read results written any way, use Read with AI.' }]
+      render(); $('#draft').focus(); return
+    }
     state = fromText(ta.value, 'own', state.setup)!
     state.importErrors = parsed.errors
     const note = `Loaded ${parsed.results.length} results for ${parsed.teams.length} teams.${parsed.errors.length ? ` These ${parsed.errors.length} row${parsed.errors.length === 1 ? ' was' : 's were'} skipped:` : ''}`
@@ -192,7 +326,7 @@ function renderImport(): void {
     say(note.replace(/:$/, '.'))
   })
   $('#sample').addEventListener('click', () => reset())
-  $('#cancel').addEventListener('click', () => { state.importOpen = false; state.importNote = ''; render(); $('#own').focus() })
+  $('#cancel').addEventListener('click', () => { state.importOpen = false; state.importNote = ''; intake = { status: 'idle' }; render(); $('#own').focus() })
 }
 
 function renderSlots(): void {

@@ -1,3 +1,3 @@
 import { defineConfig } from 'vite'
-// BASE_PATH=/regrade/ for GitHub Pages; default "/" for local and other hosts
+// production is on Vercel at "/"; BASE_PATH is only for serving under a sub-path
 export default defineConfig({ base: process.env.BASE_PATH ?? '/' })

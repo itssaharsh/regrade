@@ -21,7 +21,7 @@ export function sampleSetup(): Setup {
     venues: [{ name: 'Oakford Leisure Centre', pitches: ['Pitch 1', 'Pitch 2', 'Pitch 3', 'Pitch 4'] }, { name: 'Ashby Playing Fields', pitches: ['Pitch 1', 'Pitch 2', 'Pitch 3', 'Pitch 4'] }],
     times: ['09:00', '10:00', '11:00'],
     weeks: 4,
-    firstSaturday: '2026-10-17',
+    firstSaturday: '2026-10-24',
   }
 }
 
@@ -33,7 +33,7 @@ function poisson(rand: () => number, lambda: number): number {
 }
 
 /** 48 teams, 6 Saturdays of results in the league's guessed divisions; about a third of teams were guessed into the wrong division. */
-export function sampleResultsCsv(seed = 20261017): { csv: string; teams: Team[]; strengths: Map<string, number> } {
+export function sampleResultsCsv(seed = 20261017): { csv: string; teams: Team[]; strengths: Map<string, number>; nextSaturday: { division: string; home: string; away: string; hs: number; as: number }[] } {
   const rand = mulberry32(seed)
   const teams: Team[] = []
   const strengths = new Map<string, number>()
@@ -72,5 +72,43 @@ export function sampleResultsCsv(seed = 20261017): { csv: string; teams: Team[];
       })
     }
   })
-  return { csv: rows.join('\n') + '\n', teams, strengths }
+  // the 7th Saturday (17/10), drawn after the six in the file so they stay identical: the results the sample message reports
+  const nextSaturday: { division: string; home: string; away: string; hs: number; as: number }[] = []
+  divisions.forEach((div, di) => {
+    const rounds = circleRounds(div.map(t => t.id))
+    rounds[6].forEach(([a, b]) => {
+      if (a === BYE || b === BYE) return
+      const diff = strengths.get(a)! - strengths.get(b)!
+      const hs = poisson(rand, Math.min(5, Math.max(0.3, 2.2 + 0.9 * diff)))
+      const as = poisson(rand, Math.min(5, Math.max(0.3, 2.0 - 0.9 * diff)))
+      const nm = (id: string) => teams.find(t => t.id === id)!.name
+      nextSaturday.push({ division: `Division ${di + 1}`, home: nm(a), away: nm(b), hs, as })
+    })
+  })
+  return { csv: rows.join('\n') + '\n', teams, strengths, nextSaturday }
+}
+
+/**
+ * Saturday 17/10 as coaches might report it in a group chat: headings, short names, mixed score formats, a postponement and chat.
+ * Fictional, like the rest of the sample; it exists so the "read with AI" step can be tried without real data.
+ */
+export function sampleMessage(): string {
+  const games = sampleResultsCsv().nextSaturday
+  const short = (name: string): string => { const w = name.split(' '); return w.length > 2 ? `${w[0]} ${w[w.length - 1]}` : name }
+  const out: string[] = ['U9 results, Sat 17 Oct', '']
+  let div = ''
+  games.forEach((g, i) => {
+    if (g.division !== div) { div = g.division; out.push(i ? '' : '', `${div}:`) }
+    const home = i % 4 === 1 ? short(g.home) : g.home
+    if (i === 9) { out.push(`${home} v ${g.away} postponed, pitch waterlogged`); return }
+    const style = i % 5
+    out.push(style === 0 ? `${home} ${g.hs} ${g.away} ${g.as}`
+      : style === 1 ? `${home} v ${g.away} ${g.hs}-${g.as}`
+      : style === 2 ? `${home} ${g.hs} - ${g.as} ${g.away}`
+      : style === 3 && g.hs > g.as ? `${home} beat ${g.away} ${g.hs}-${g.as}`
+      : `${home} ${g.hs}-${g.as} ${g.away} 👍`)
+    if (i === 5) out.push('Great effort from both teams, ref was brilliant')
+  })
+  out.push('', 'Thanks all, see you next week')
+  return out.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n')
 }
