@@ -407,9 +407,16 @@
         "observe: baseline run recorded with clashes, repeats, gap and missing fixtures"
       ],
       "rollback": "n/a",
-      "status": "doing",
+      "status": "done",
       "base": "8049292",
-      "started_after": 126
+      "started_after": 126,
+      "evidence": [
+        "E0146",
+        "E0147",
+        "E0148",
+        "E0149",
+        "E0150"
+      ]
     },
     {
       "id": "T12",

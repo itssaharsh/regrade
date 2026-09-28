@@ -7,12 +7,12 @@ scope: global-candidate
 components: index.html, src/style.css, src/main.ts
 triggers: CLS, layout shift, first paint, module script, deferred, empty shell, Lighthouse desktop
 evidence: src/style.css#L43-44, src/main.ts, commit:e8c2ad6
-verified_at: 2026-09-27@e8c2ad6
+verified_at: 2026-09-28@0f01848
 relates: F-0005
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: c14f6bb3ba09b305
+cite_hash: ef12a8675926025c
 created: 2026-09-27
 source: unknown
 ---

@@ -7,12 +7,12 @@ scope: global-candidate
 components: index.html, src/style.css, public/fonts
 triggers: CLS, layout shift, Lighthouse, Google Fonts, font-display swap, preload, web font
 evidence: index.html#L10-11, src/style.css#L1-4, commit:36ed975
-verified_at: 2026-09-27@e8c2ad6
+verified_at: 2026-09-28@0f01848
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: ec450a4dc9fab97f
+cite_hash: c00f0ada3cbaaf0a
 created: 2026-09-27
 source: unknown
 ---

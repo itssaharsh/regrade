@@ -7,12 +7,12 @@ scope: global-candidate
 components: .gitignore
 triggers: lighthouse, WSL, chrome-launcher, temp dir, C:, git status
 evidence: .gitignore#L13, .prod-build/state.md#L25
-verified_at: 2026-09-27@e8c2ad6
+verified_at: 2026-09-28@0f01848
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: bc39bbc5c83e94a2
+cite_hash: 2fce338493eb568c
 created: 2026-09-27
 source: unknown
 ---

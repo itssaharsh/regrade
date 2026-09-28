@@ -7,12 +7,12 @@ scope: global-candidate
 components: .prod-build/evidence.jsonl, .prod-build/plan.json
 triggers: git revert, rollback, evidence ledger, hash chain, conflict, plan statuses
 evidence: CLAUDE.md#L7, .prod-build/state.md#L25, commit:1e77e21
-verified_at: 2026-09-27@e8c2ad6
+verified_at: 2026-09-28@0f01848
 relates: 
 supersedes: 
 helpful: 0
 harmful: 0
-cite_hash: 3d4179ece64d11e4
+cite_hash: 4c9793fa13081038
 created: 2026-09-27
 source: unknown
 ---
